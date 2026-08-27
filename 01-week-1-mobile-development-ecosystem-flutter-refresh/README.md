@@ -1,17 +1,10 @@
-# my_first_app
+# Tugas Minggu 1 : Mobile Development Ecosystem & Flutter Refresh
 
-A new Flutter project.
+## Fitur Utama
+* Menampilkan AppBar (tulisan Profil Mahasiswa).
+* Menampilkan ikon edukasi (Icons.school).
+* Menampilkan identitas (Rafi Adrian Prasetya) dan matkul (Pemrograman Mobile – Minggu 1).
 
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Hasil yang Dicapai
+Aplikasi berhasil jalan dengan lancar tanpa error.
+Bukti screenshot saat aplikasi dijalankan ada pada folder screenshots/.
