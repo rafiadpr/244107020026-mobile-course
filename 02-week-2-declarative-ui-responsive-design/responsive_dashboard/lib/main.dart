@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 
+// refactor 3
 const double kWideBreakpoint = 700.0;
 
 void main() => runApp(const DashboardApp());
@@ -67,6 +68,7 @@ class DashboardPage extends StatelessWidget {
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
+          // refactor 3
           final columns = constraints.maxWidth >= kWideBreakpoint ? 2 : 1;
 
           return Column(
@@ -98,6 +100,7 @@ class DashboardPage extends StatelessWidget {
                   crossAxisSpacing: 16,
                   mainAxisSpacing: 16,
                   childAspectRatio: 2.6,
+                  // refactor 1
                   children: const [
                     InfoCard(title: 'IPK Semester', value: '3.85'),
                     InfoCard(title: 'SKS Ditempuh', value: '78 / 144'),
@@ -114,6 +117,7 @@ class DashboardPage extends StatelessWidget {
   }
 }
 
+// refactor 1
 class InfoCard extends StatelessWidget {
   const InfoCard({
     required this.title,
@@ -126,6 +130,7 @@ class InfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // refactor 2
     final theme = Theme.of(context);
 
     return Semantics(
@@ -139,6 +144,7 @@ class InfoCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
+                  // refactor 2
                   style: theme.textTheme.titleMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -146,6 +152,7 @@ class InfoCard extends StatelessWidget {
               ),
               Text(
                 value,
+                // refactor 2
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: theme.colorScheme.primary,
