@@ -94,6 +94,20 @@ Tambahkan widget test di folder test/ untuk memverifikasi perilaku responsif. Ov
 Jalankan dengan flutter test. Kedua test harus lulus sebelum tugas dikumpulkan. Simpan hasil test pada folder test/ di folder tugas minggu ini.
 ![Flutter Test](screenshots/fluttertest.png)
 
+# Checklist Verifikasi
+1. flutter analyze tidak menghasilkan error.
+![Flutter Analyze](screenshots/flutteranalyze.png)
+
+2. flutter test lulus semua widget test responsif.
+![Flutter Test](screenshots/fluttertest.png)
+
+3. Aplikasi dapat dijalankan pada ukuran layar sempit dan lebar.
+![Ukuran Ponsel](screenshots/5_inch.png)
+![Ukuran Tablet](screenshots/10_inch.png)
+
+4. Dark mode memiliki kontras dan teks yang terbaca.
+![Dark Mode](screenshots/praktikum_dashboard_responsive_1.jpg)
+
 # Refleksi dan referensi
 1. Apa perbedaan cara berpikir imperative dan declarative saat membangun UI?
 Imperative: Menulis kode line-by-line untuk mengubah widget secara langsung setiap kali ada data baru
