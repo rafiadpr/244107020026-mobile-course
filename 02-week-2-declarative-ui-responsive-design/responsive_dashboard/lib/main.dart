@@ -83,10 +83,10 @@ class DashboardPage extends StatelessWidget {
                     child: ListTile(
                       leading: CircleAvatar(child: Icon(Icons.person)),
                       title: Text(
-                        'Mahasiswa Aktif',
+                        'Rafi Adrian Prasetya',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      subtitle: Text('Teknologi Informasi — Semester 4'),
+                      subtitle: Text('NIM : 244107020026'),
                     ),
                   ),
                 ),
