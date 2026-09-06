@@ -13,207 +13,102 @@ class DashboardApp extends StatefulWidget {
 }
 
 class _DashboardAppState extends State<DashboardApp> {
-  bool _isDark = false;
+  bool isDark = false;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Academic Overview',
-      theme: ThemeData(
-        useMaterial3: true,
-        colorSchemeSeed: Colors.indigo,
-        brightness: Brightness.light,
-      ),
+      theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.indigo),
       darkTheme: ThemeData(
         useMaterial3: true,
-        colorSchemeSeed: Colors.indigo,
         brightness: Brightness.dark,
+        colorSchemeSeed: Colors.indigo,
       ),
-      themeMode: _isDark ? ThemeMode.dark : ThemeMode.light,
-      home: AcademicOverviewPage(
-        isDark: _isDark,
-        onThemeChanged: (val) => setState(() => _isDark = val),
+      themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
+      home: DashboardPage(
+        isDark: isDark,
+        onDarkChanged: (val) => setState(() => isDark = val),
       ),
     );
   }
 }
 
-class AcademicOverviewPage extends StatelessWidget {
-  const AcademicOverviewPage({
+class DashboardPage extends StatelessWidget {
+  const DashboardPage({
     required this.isDark,
-    required this.onThemeChanged,
+    required this.onDarkChanged,
     super.key,
   });
 
   final bool isDark;
-  final ValueChanged<bool> onThemeChanged;
+  final ValueChanged<bool> onDarkChanged;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Academic Overview'),
         actions: [
-          Row(
-            children: [
-              Semantics(
-                excludeSemantics: true,
-                child: Icon(isDark ? Icons.dark_mode : Icons.light_mode),
-              ),
-              const SizedBox(width: 8),
-              Semantics(
-                label: 'Alihkan mode gelap',
-                toggled: isDark,
-                child: CupertinoSwitch(
-                  value: isDark,
-                  onChanged: onThemeChanged,
-                ),
-              ),
-              const SizedBox(width: 16),
-            ],
+          ExcludeSemantics(
+            child: Icon(isDark ? Icons.dark_mode : Icons.light_mode),
           ),
+          const SizedBox(width: 8),
+          Semantics(
+            label: 'Alihkan mode gelap',
+            toggled: isDark,
+            child: CupertinoSwitch(
+              value: isDark,
+              onChanged: onDarkChanged,
+            ),
+          ),
+          const SizedBox(width: 16),
         ],
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final isWide = constraints.maxWidth >= kWideBreakpoint;
+          final columns = constraints.maxWidth >= kWideBreakpoint ? 2 : 1;
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header Profil Mahasiswa
-                _buildProfileHeader(theme),
-                const SizedBox(height: 20),
-
-                // Area Kartu Informasi Responsif
-                if (!isWide)
-                  // 1 Kolom untuk layar sempit (< 700px)
-                  const Column(
-                    children: [
-                      InfoCard(
-                        title: 'IPK Semester',
-                        value: '3.85',
-                        semanticLabel: 'Indeks Prestasi Semester: 3 koma 85',
+          return Column(
+            children: [
+              // Header Profil via ListTile (Ringkas & Rapi)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                child: Semantics(
+                  container: true,
+                  label: 'Profil Mahasiswa: Teknologi Informasi Semester 4',
+                  child: const Card(
+                    child: ListTile(
+                      leading: CircleAvatar(child: Icon(Icons.person)),
+                      title: Text(
+                        'Mahasiswa Aktif',
+                        style: TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      SizedBox(height: 12),
-                      InfoCard(
-                        title: 'SKS Ditempuh',
-                        value: '78 / 144',
-                        semanticLabel: 'SKS ditempuh: 78 dari 144 SKS',
-                      ),
-                      SizedBox(height: 12),
-                      InfoCard(
-                        title: 'Kehadiran Kuliah',
-                        value: '95%',
-                        semanticLabel: 'Persentase kehadiran: 95 persen',
-                      ),
-                      SizedBox(height: 12),
-                      InfoCard(
-                        title: 'Tugas Menunggu',
-                        value: '3',
-                        semanticLabel: 'Tugas menunggu dikerjakan: 3 tugas',
-                      ),
-                    ],
-                  )
-                else
-                  // 2 Kolom untuk layar lebar (>= 700px)
-                  const Column(
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: InfoCard(
-                              title: 'IPK Semester',
-                              value: '3.85',
-                              semanticLabel: 'Indeks Prestasi Semester: 3 koma 85',
-                            ),
-                          ),
-                          SizedBox(width: 16),
-                          Expanded(
-                            child: InfoCard(
-                              title: 'SKS Ditempuh',
-                              value: '78 / 144',
-                              semanticLabel: 'SKS ditempuh: 78 dari 144 SKS',
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: InfoCard(
-                              title: 'Kehadiran Kuliah',
-                              value: '95%',
-                              semanticLabel: 'Persentase kehadiran: 95 persen',
-                            ),
-                          ),
-                          SizedBox(width: 16),
-                          Expanded(
-                            child: InfoCard(
-                              title: 'Tugas Menunggu',
-                              value: '3',
-                              semanticLabel: 'Tugas menunggu dikerjakan: 3 tugas',
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                      subtitle: Text('Teknologi Informasi — Semester 4'),
+                    ),
                   ),
-              ],
-            ),
+                ),
+              ),
+
+              // Area Kartu Responsif
+              Expanded(
+                child: GridView.count(
+                  padding: const EdgeInsets.all(16),
+                  crossAxisCount: columns,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 2.6,
+                  children: const [
+                    InfoCard(title: 'IPK Semester', value: '3.85'),
+                    InfoCard(title: 'SKS Ditempuh', value: '78 / 144'),
+                    InfoCard(title: 'Kehadiran Kuliah', value: '95%'),
+                    InfoCard(title: 'Tugas Menunggu', value: '3'),
+                  ],
+                ),
+              ),
+            ],
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildProfileHeader(ThemeData theme) {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 28,
-            backgroundColor: theme.colorScheme.primary,
-            child: Text(
-              'M',
-              style: theme.textTheme.titleLarge?.copyWith(
-                color: theme.colorScheme.onPrimary,
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Mahasiswa Aktif',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Teknologi Informasi — Semester 4',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -223,13 +118,11 @@ class InfoCard extends StatelessWidget {
   const InfoCard({
     required this.title,
     required this.value,
-    this.semanticLabel,
     super.key,
   });
 
   final String title;
   final String value;
-  final String? semanticLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -237,23 +130,20 @@ class InfoCard extends StatelessWidget {
 
     return Semantics(
       container: true,
-      label: semanticLabel ?? '$title: $value',
-      excludeSemantics: true,
+      label: 'Kategori $title, nilai $value',
       child: Card(
-        elevation: 1,
-        child: Container(
-          padding: const EdgeInsets.all(20.0),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
           child: Row(
             children: [
               Expanded(
                 child: Text(
                   title,
-                  style: theme.textTheme.titleSmall?.copyWith(
+                  style: theme.textTheme.titleMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
               Text(
                 value,
                 style: theme.textTheme.headlineSmall?.copyWith(
