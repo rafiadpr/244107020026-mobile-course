@@ -31,7 +31,7 @@
 Menampilkan data lama dan indikator refresh lebih baik daripada mengosongkan layar karena user tetap bisa melihat dan berinteraksi dengan konten yang ada, jika layar dikosongkan akan memberikan kesan aplikasi "rusak". Menurut saya pola ini penting di infinite scroll / pagination (situasi data lama masih relevan saat menunggu data baru)
 
 
-# AI Verification Checklist
+# AI Challenge
 ## 1. Prompt yang Digunakan
 Buatkan halaman Flutter bernama StatsPage menggunakan flutter_riverpod.
 Requirements:
@@ -48,6 +48,7 @@ AI menghasilkan tiga file:
 - `lib/pages/stats_page.dart` — UI `ConsumerWidget`
 - `test/stats_notifier_test.dart` — 5 unit test
 
+## 3. AI Verification Checklist
 Sebelum kode AI diterima, verifikasi hal berikut dan catat temuan Anda di README:
 
 1. Apakah state diubah secara immutable (tidak ada state.add() atau mutasi list langsung)?
@@ -68,7 +69,7 @@ Sebelum kode AI diterima, verifikasi hal berikut dan catat temuan Anda di README
 6. Jalankan flutter analyze dan flutter test, apakah hasil AI lolos tanpa warning?
 - Lolos untuk flutter analyze, tapi hasil awal dari flutter test sempat gagal.
 
-## 3. Perbaikan Hasil AI
+## 4. Perbaikan Hasil AI
 - Kesalahan pada kode awal:
 Saat menjalankan flutter test, tes ke-3 (skenario saat data gagal diambil) error. Penyebabnya adalah AI menggunakan invalidate() untuk tes kondisi error. Pada Riverpod, kode ini justru membuat status berubah menjadi AsyncLoading, bukan menghasilkan AsyncError.
 
@@ -120,11 +121,11 @@ Bangun aplikasi ToDo dengan navigasi dan Riverpod sebagai tugas minggu ini:
 
 ## Refleksi
 1. Kapan setState masih cukup, dan kapan state harus naik ke Riverpod?
-- setState masih cukup jika data hanya dipakai di dalam satu widget itu sendiri. Harus naik ke Riverpod jika data perlu dibagikan ke widget atau halaman lain (app state)
+- setState masih cukup jika data hanya dipakai di dalam satu widget. Harus naik ke Riverpod jika data perlu dibagikan ke widget atau halaman lain (app state)
 2. Apa perbedaan context.go dan context.push, dan kapan masing-masing tepat digunakan?
-- context.push: menumpuk halaman baru di atas halaman saat ini, dipakai ketika user masih perlu kembali ke halaman sebelumnya menggunakan tombol back. context.go: mengganti alur rute navigasi secara menyeluruh sesuai struktur URL/path, dipakai ketika alur utama yang tidak memerlukan navigasi kembali, seperti dari halaman login ke dashboard.
+- context.push: menumpuk halaman baru di atas halaman saat ini, dipakai ketika user masih perlu kembali ke halaman sebelumnya menggunakan tombol back. context.go: mengganti alur rute navigasi secara menyeluruh, dipakai ketika tidak memerlukan navigasi kembali, seperti dari halaman login ke dashboard.
 3. Bagaimana AsyncValue mencegah bug dibanding tiga boolean terpisah?
-- AsyncValue mencegah masalah ini karena hanya bisa memiliki satu kondisi dalam satu waktu (sedang memuat (loading), terjadi kegagalan (error), atau data berhasil didapat (data))
+- AsyncValue mencegah masalah ini karena hanya bisa memiliki satu kondisi dalam satu waktu (loading, error, atau data berhasil didapat (data))
 4. Bagian mana dari hasil AI yang Anda perbaiki, dan mengapa?
-- Bagian yang diperbaiki : Skenario pengujian kegagalan data (Test 3) pada file stats_notifier_test.dart. 
-- Alasannya : Kode AI pakai kode container.invalidate(statsProvider) untuk tes kondisi error. Di Riverpod, kode tersebut justru mengubah state menjadi AsyncLoading (mode mencoba memuat ulang), sehingga pengujian gagal mendeteksi AsyncError.
+- Bagian yang diperbaiki : Skenario tes kegagalan data (test 3) pada file stats_notifier_test.dart
+- Alasannya : Kode AI pakai kode container.invalidate(statsProvider) untuk tes kondisi error. Di Riverpod, kode tersebut justru mengubah state menjadi AsyncLoading (mode mencoba memuat ulang), sehingga tes gagal mendeteksi AsyncError.
