@@ -25,26 +25,54 @@ AI menghasilkan tiga file:
 Sebelum kode AI diterima, verifikasi hal berikut dan catat temuan Anda di README:
 
 1. Apakah state diubah secara immutable (tidak ada state.add() atau mutasi list langsung)?
-Iya, state diubah secara immutable. Tidak ada penggunaan state.add() atau mutasi langsung
+- Iya, state diubah secara immutable. Tidak ada penggunaan state.add() atau mutasi langsung
 
 2. Apakah ref.watch hanya dipakai di dalam build, dan ref.read di callback?
-Iya, ref.watch hanya diletakkan di dalam fungsi build untuk memantau perubahan data. Sedangkan ref.read hanya digunakan di dalam callback tombol
+- Iya, ref.watch hanya diletakkan di dalam fungsi build untuk memantau perubahan data. Sedangkan ref.read hanya digunakan di dalam callback tombol
 
 3. Apakah ketiga state AsyncValue benar-benar ditangani (bukan hanya success)?
-Iya, ketiga state sudah ditangani menggunakan metode .when(). Kode sudah menyediakan tampilan untuk kondisi loading, error, dan data sukses
+- Iya, ketiga state sudah ditangani menggunakan metode .when(). Kode sudah menyediakan tampilan untuk kondisi loading, error, dan data sukses
 
 4. Apakah provider dideklarasikan dengan tipe eksplisit dan tidak duplikat dengan provider lain?
-Iya, tipe data pada provider ditulis menggunakan AsyncNotifierProvider<StatsNotifier, List<Stat>> dan tidak ada duplikasi provider
+- Iya, tipe data pada provider ditulis menggunakan AsyncNotifierProvider<StatsNotifier, List<Stat>> dan tidak ada duplikasi provider
 
 5. Apakah kode AI memakai API Riverpod versi lama (StateProvider antipattern, StateNotifierProvider usang, atau Consumer bertingkat yang tidak perlu)? Perbaiki ke pola Notifier/ConsumerWidget.
-Tidak, kode AI sudah menggunakan API Riverpod versi terbaru (kode sudah pakai AsyncNotifier dan ConsumerWidget)
+- Tidak, kode AI sudah menggunakan API Riverpod versi terbaru (kode sudah pakai AsyncNotifier dan ConsumerWidget)
 
 6. Jalankan flutter analyze dan flutter test, apakah hasil AI lolos tanpa warning?
-Lolos untuk flutter analyze, tapi hasil awal dari flutter test sempat gagal.
+- Lolos untuk flutter analyze, tapi hasil awal dari flutter test sempat gagal.
 
 ## 3. Perbaikan Hasil AI
-Kesalahan pada kode awal:
+- Kesalahan pada kode awal:
 Saat menjalankan flutter test, tes ke-3 (skenario saat data gagal diambil) error. Penyebabnya adalah AI menggunakan invalidate() untuk tes kondisi error. Pada Riverpod, kode ini justru membuat status berubah menjadi AsyncLoading, bukan menghasilkan AsyncError.
 
-Perbaikan yang dilakukan:
+- Perbaikan yang dilakukan:
 Kode invalidate() pada file stats_notifier_test.dart telah diganti dengan memanggil fungsi refresh(). Setelah perbaikan, seluruh tes sudah berhasil.
+
+
+# Refactoring dan testing
+## 1. Refactoring Challenge
+Lakukan refactoring berikut pada aplikasi ToDo Anda, lalu commit dengan pesan yang jelas:
+
+1. Pisahkan widget bar ToDo menjadi TodoTile tersendiri agar build lebih pendek dan mudah diuji.
+- Pemisahan UI untuk satu item tugas telah dilakukan dengan membuat widget `TodoTile` pada file [`lib/widgets/todo_tile.dart`](lib/widgets/todo_tile.dart).
+2. Ekstrak logika filter (misal tampilkan hanya yang belum selesai) menjadi Provider turunan yang membaca todoListProvider.
+- Logika filter telah dipisahkan dengan membuat `incompleteTodosProvider` pada [`lib/providers/todo_provider.dart`](lib/providers/todo_provider.dart).
+3. Integrasikan aplikasi ToDo dengan GoRouter: / untuk daftar dan /stats untuk halaman statistik, tambahkan NavigationBar untuk berpindah.
+- Aplikasi telah diubah untuk menggunakan `go_router` pada [`lib/main.dart`](lib/main.dart) menggantikan navigasi bawaan.
+
+## 2. Testing
+Widget test untuk memastikan UI bereaksi terhadap perubahan state provider. Jalankan seluruh verifikasi:
+- Kode pengujian (widget test) untuk skenario "menambah tugas baru" telah ditambahkan dan disesuaikan di [`test/widget_test.dart`](test/widget_test.dart).
+![Flutter Test](week3_todo/screenshots/flutter_test.png)
+
+## 3. Checklist verifikasi mandiri
+1. Navigasi GoRouter bekerja: pindah halaman, back, dan akses path detail langsung.
+![Navigasi](week3_todo/screenshots/tampilan_awal_refactoring.jpg)
+2. ProviderScope membungkus root aplikasi; state ToDo bertahan saat berpindah halaman.
+![Final Page](week3_todo/screenshots/tampilan_final_refactor.jpg)
+3. UI AsyncValue menangani loading, error, dan success, bukan hanya success.
+![Error Page](week3_todo/screenshots/page_error.jpg)
+4. flutter analyze tanpa issue dan semua test lulus.
+![Flutter Analyze](week3_todo/screenshots/flutter_analyze.png)
+5. Hasil AI diverifikasi dan didokumentasikan pada folder docs/.
