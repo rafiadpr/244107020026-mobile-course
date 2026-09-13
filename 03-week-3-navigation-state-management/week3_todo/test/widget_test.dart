@@ -1,30 +1,65 @@
-// This is a basic Flutter widget test.
+// Widget test untuk memverifikasi bahwa StatsPage menampilkan
+// judul "Statistik", loading state, lalu data setelah resolve.
 //
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
+// Menggunakan provider override agar build() tidak punya
+// Future.delayed (timer) — menghindari "Timer is still pending"
+// yang terjadi di FakeAsync environment milik flutter_test.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:week3_todo/pages/stats_page.dart';
+import 'package:week3_todo/providers/stats_provider.dart';
 
-import 'package:week3_todo/main.dart';
+// ──────────────────────────────────────────────────────────────────────
+// Notifier pengganti untuk testing: langsung return data tanpa delay
+// dan tanpa random failure. Ini menghilangkan timer sehingga
+// widget test tidak konflik dengan FakeAsync.
+// ──────────────────────────────────────────────────────────────────────
+class _ImmediateStatsNotifier extends StatsNotifier {
+  @override
+  Future<List<Stat>> build() async {
+    // Tidak ada Future.delayed — langsung return data.
+    return const [
+      Stat(label: 'Pengguna Aktif', value: 1200),
+      Stat(label: 'Tugas Selesai', value: 340),
+      Stat(label: 'Rata-rata Harian', value: 57),
+    ];
+  }
+}
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('StatsPage menampilkan judul lalu data setelah loading',
+      (WidgetTester tester) async {
+    // Override statsProvider agar memakai notifier tanpa delay.
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          statsProvider.overrideWith(() => _ImmediateStatsNotifier()),
+        ],
+        child: const MaterialApp(home: StatsPage()),
+      ),
+    );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // Judul AppBar harus langsung tampil.
+    expect(find.text('Statistik'), findsOneWidget);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    // Pada frame pertama, state masih AsyncLoading karena
+    // build() async belum resolve (walaupun tanpa delay,
+    // Future tetap resolve di microtask berikutnya).
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Pump agar microtask dari build() async selesai.
+    await tester.pumpAndSettle();
+
+    // Sekarang state sudah AsyncData — data tampil di ListView.
+    expect(find.text('Pengguna Aktif'), findsOneWidget);
+    expect(find.text('Tugas Selesai'), findsOneWidget);
+    expect(find.text('Rata-rata Harian'), findsOneWidget);
+
+    // Nilai juga ditampilkan.
+    expect(find.text('1200'), findsOneWidget);
+    expect(find.text('340'), findsOneWidget);
+    expect(find.text('57'), findsOneWidget);
   });
 }
