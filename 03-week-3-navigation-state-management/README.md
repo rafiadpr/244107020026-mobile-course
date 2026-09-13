@@ -13,9 +13,9 @@
 ## 1. Bungkus aplikasi dengan ProviderScope di lib/main.dart:
 - Kode ada pada [`lib/main.dart`](week3_todo/lib/main.dart)
 ## 2. Buat state dan provider (week3_todo/lib/providers/todo_provider.dart):
-- Kode ada pada [`lib/main.dart`](week3_todo/lib/providers/todo_provider.dart)
+- Kode ada pada [`lib/providers/todo_provider.dart`](week3_todo/lib/providers/todo_provider.dart)
 ## 3. Tampilkan dengan ConsumerWidget (week3_todo/lib/pages/todo_page.dart):
-- Kode ada pada [`lib/main.dart`](week3_todo/lib/providers/todo_provider.dart)
+- Kode ada pada [`lib/providers/todo_page.dart`](week3_todo/lib/providers/todo_page.dart)
 - ![Home Screen](week3_todo/screenshots/halaman_utama.jpg)
 ## 4. Perhatikan pola penting: ref.watch di dalam build membuat halaman otomatis ter-rebuild saat daftar berubah; ref.read(todoListProvider.notifier) di dalam callback hanya memanggil method tanpa berlangganan.
 
