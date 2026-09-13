@@ -3,8 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class ProductsNotifier extends AsyncNotifier<List<String>> {
   @override
   Future<List<String>> build() async {
-    await Future.delayed(const Duration(seconds: 2)); // simulasi network
-    return ['Keyboard', 'Mouse', 'Monitor'];
+    throw Exception('Gagal terhubung ke server');
   }
 
   Future<void> refresh() async {
@@ -18,6 +17,6 @@ class ProductsNotifier extends AsyncNotifier<List<String>> {
   }
 }
 
-final productsProvider =
-    AsyncNotifierProvider<ProductsNotifier, List<String>>(
-        ProductsNotifier.new);
+final productsProvider = AsyncNotifierProvider<ProductsNotifier, List<String>>(
+  ProductsNotifier.new,
+);
