@@ -23,14 +23,16 @@ final commentRepositoryProvider = Provider<CommentRepository>(
 /// Notifier yang mengelola state daftar komentar untuk satu postId.
 ///
 /// Menggunakan [AsyncNotifier] (bukan [StateNotifier]) karena:
-/// - build() bisa langsung async dan mengembalikan Future<List<Comment>>.
+/// - build() bisa langsung async dan mengembalikan `Future<List<Comment>>`.
 /// - Exception yang dilempar build() **otomatis** menjadi [AsyncError],
 ///   tanpa perlu try/catch manual di sekitar pemanggilan fetch.
 ///
 /// [postId] dilewatkan sebagai argumen via [commentListProvider.call(postId)].
 class CommentListNotifier extends AsyncNotifier<List<Comment>> {
-  // postId disimpan agar refresh() bisa memanggil ulang tanpa argumen.
-  late int _postId;
+  // postId diterima lewat constructor dan disimpan agar
+  // build() dan refresh() bisa menggunakannya tanpa argumen.
+  CommentListNotifier(this._postId);
+  final int _postId;
 
   /// build() dipanggil Riverpod saat provider pertama kali dibaca
   /// atau setelah di-invalidate (misal: setelah refresh).
@@ -39,10 +41,9 @@ class CommentListNotifier extends AsyncNotifier<List<Comment>> {
   /// dari repository akan ditangkap Riverpod dan disimpan sebagai
   /// state = AsyncError(error, stackTrace) secara otomatis.
   @override
-  Future<List<Comment>> build(int postId) async {
-    _postId = postId;
+  Future<List<Comment>> build() async {
     final repo = ref.watch(commentRepositoryProvider);
-    return repo.fetchComments(postId);
+    return repo.fetchComments(_postId);
   }
 
   /// Memuat ulang komentar secara manual (misal: tombol "Coba lagi").
@@ -76,9 +77,9 @@ class CommentListNotifier extends AsyncNotifier<List<Comment>> {
 ///
 /// `retry: (_, __) => null` menonaktifkan retry otomatis Riverpod 3
 /// sehingga error langsung final dan unit test tidak menggantung.
-final commentListProvider = AsyncNotifierProviderFamily<
+final commentListProvider = AsyncNotifierProvider.family<
     CommentListNotifier, List<Comment>, int>(
-  CommentListNotifier.new,
+  (arg) => CommentListNotifier(arg),
   retry: (retryCount, error) => null,
 );
 

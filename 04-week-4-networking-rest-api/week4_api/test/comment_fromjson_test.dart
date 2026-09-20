@@ -45,16 +45,11 @@ void main() {
       final comment = Comment.fromJson(json);
 
       // Assert: setiap field menggunakan nilai default yang aman.
-      expect(comment.postId, 0,
-          reason: 'postId hilang → default 0');
-      expect(comment.id, 0,
-          reason: 'id hilang → default 0');
-      expect(comment.name, '',
-          reason: 'name hilang → default string kosong');
-      expect(comment.email, '',
-          reason: 'email hilang → default string kosong');
-      expect(comment.body, '',
-          reason: 'body hilang → default string kosong');
+      expect(comment.postId, 0, reason: 'postId hilang → default 0');
+      expect(comment.id, 0, reason: 'id hilang → default 0');
+      expect(comment.name, '', reason: 'name hilang → default string kosong');
+      expect(comment.email, '', reason: 'email hilang → default string kosong');
+      expect(comment.body, '', reason: 'body hilang → default string kosong');
     });
 
     test('hanya postId & email yang ada, sisanya hilang', () {
@@ -90,8 +85,8 @@ void main() {
 
       final comment = Comment.fromJson(json);
 
-      expect(comment.postId, 0);  // null → 0
-      expect(comment.id, 0);      // null → 0
+      expect(comment.postId, 0); // null → 0
+      expect(comment.id, 0); // null → 0
       expect(comment.name, 'Ada nama');
       expect(comment.email, ''); // null → ''
       expect(comment.body, 'Ada body');
@@ -117,6 +112,27 @@ void main() {
       expect(decoded.name, original.name);
       expect(decoded.email, original.email);
       expect(decoded.body, original.body);
+    });
+  });
+
+  // tambahan tes
+  // ─── Grup: tipe data numerik / desimal ──────────────────────────────────
+  group('Comment.fromJson — tipe data angka desimal (double)', () {
+    test('field numerik bertipe desimal → terpotong ke int via .toInt() tanpa crash', () {
+      const json = <String, dynamic>{
+        'postId': 1.5,
+        'id': 2.9,
+        'name': 'Komentar desimal',
+        'email': 'desimal@example.com',
+        'body': 'Uji parsing angka float',
+      };
+
+      // Act
+      final comment = Comment.fromJson(json);
+
+      expect(comment.postId, 1, reason: '1.5 terpotong menjadi 1');
+      expect(comment.id, 2, reason: '2.9 terpotong menjadi 2');
+      expect(comment.name, 'Komentar desimal');
     });
   });
 }

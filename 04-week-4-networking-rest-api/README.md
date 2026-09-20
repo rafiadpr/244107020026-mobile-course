@@ -69,9 +69,28 @@ Jelaskan setiap bagian kode dalam komentar.
 ## Checklist : 
 Sebelum kode AI diterima, verifikasi hal berikut dan catat temuan Anda di README:
 
-- Apakah UI memanggil Dio secara langsung (dilarang) atau lewat repository?
-- Apakah fromJson aman null, atau masih memakai cast langsung yang bisa crash?
-- Apakah semua tipe DioExceptionType (timeout, connectionError, badResponse) dipetakan ke pesan pengguna?
-- Apakah baseUrl/timeout terpusat di satu client, bukan tersebar di tiap method?
-- Apakah test AI benar-benar menguji kasus field hilang, atau hanya happy path? Tambahkan minimal 1 edge case sendiri.
-- Jalankan flutter analyze dan flutter test, apakah hasil AI lolos tanpa warning?
+1. Apakah UI memanggil Dio secara langsung (dilarang) atau lewat repository?
+- Hasilnya adalah UI tidak memanggil dio secara langsung. Alirannya juga benar yaitu dari UI - Provider - Repository - Dio.
+
+2. Apakah fromJson aman null, atau masih memakai cast langsung yang bisa crash?
+- Hasilnya adalah fromJson aman dari null, kedua model sudah pakai 'as Type?' untuk memastikan jika field hilang atau null maka akan return null dan bukan 'TypeError'
+
+3.  Apakah semua tipe DioExceptionType (timeout, connectionError, badResponse) dipetakan ke pesan pengguna?
+- Iya, semua tipe DIoExceptionType sudah digunakan, semua kode bisa dilihat di comment_providers.dart. 
+
+4. Apakah baseUrl/timeout terpusat di satu client, bukan tersebar di tiap method?
+- baseUrl ada di satu client yaitu di api_client.dart (AI tidak membuat client baru).
+
+5.  Apakah test AI benar-benar menguji kasus field hilang, atau hanya happy path? Tambahkan minimal 1 edge case sendiri.
+- Tes AI sudah menguji kasus field hilang, semua tes ada di test/comment_fromjson_test.dart. hasilnya adalah 4 edge case (JSON kosong, parsial, null eksplisit, round-trip) sudah berhasil.
+- Edge case tambahan : ada di file test/comment_fromjson_test.dart line 118
+![Hasil Test](week4_api/screenshots/hasil_tes.png)
+
+6. Jalankan flutter analyze dan flutter test, apakah hasil AI lolos tanpa warning?
+- flutter analyze : gagal (4 issues), msalah utama di comment_providers.dart masih pakai kode lama Riverpod 2 (AsyncNotifierProviderFamily dan parameter di build()) yang sudah tidak support
+- flutter test : 5 berhasil 1 gagal, widget_test.dart gagal karena masih memeriksa fitur counter bawaan template yang sudah tidak dipakai
+
+## Perbaikan yang dilakukan :
+1. build(int postId) ubah ke build(int arg)
+2. AsyncNotifierProviderFamily<...>() ubah ke CommentListNotifier(arg), ...
+3. widget_test.dart : hapus test boilerplate counter bawaan yang sudah tidak bisa digunakan
