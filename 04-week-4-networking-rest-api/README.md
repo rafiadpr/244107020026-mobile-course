@@ -53,3 +53,25 @@
 
 ## Ubah home di main.dart menjadi PagedPostPage, jalankan, dan scroll sampai bawah. Amati: halaman 1 tampil dulu, indikator muncul, data bertambah tanpa reload penuh.
 ![Indikator Muncul](week4_api/screenshots/indikator_muncul.jpg)
+
+
+# AI Challenge
+
+## Prompt : 
+- Buatkan repository layer Flutter untuk endpoint GET /comments?postId={id} dari JSONPlaceholder menggunakan Dio + flutter_riverpod.
+Requirements:
+- Model Comment dengan fromJson aman null (postId, id, name, email, body).
+- CommentRepository dengan method fetchComments(postId) + timeout 10 detik.
+- AsyncNotifierProvider dengan penanganan error otomatis (AsyncError) dan fungsi pesan error ramah pengguna untuk timeout, connection error, 404, dan 500.
+- Satu unit test untuk fromJson dengan field yang hilang.
+Jelaskan setiap bagian kode dalam komentar.
+
+## Checklist : 
+Sebelum kode AI diterima, verifikasi hal berikut dan catat temuan Anda di README:
+
+- Apakah UI memanggil Dio secara langsung (dilarang) atau lewat repository?
+- Apakah fromJson aman null, atau masih memakai cast langsung yang bisa crash?
+- Apakah semua tipe DioExceptionType (timeout, connectionError, badResponse) dipetakan ke pesan pengguna?
+- Apakah baseUrl/timeout terpusat di satu client, bukan tersebar di tiap method?
+- Apakah test AI benar-benar menguji kasus field hilang, atau hanya happy path? Tambahkan minimal 1 edge case sendiri.
+- Jalankan flutter analyze dan flutter test, apakah hasil AI lolos tanpa warning?
