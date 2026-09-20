@@ -126,3 +126,19 @@ Sebelum kode AI diterima, verifikasi hal berikut dan catat temuan Anda di README
 5. Hasil AI diverifikasi dan didokumentasikan pada folder docs/.\
 
 
+# Tugas, refleksi, dan referensi
+
+## Mini project / Industry Challenge (Sudah dikerjakan diatas)
+
+## Refleksi
+1. Mengapa UI dilarang memanggil Dio langsung? Apa yang rusak jika aturan ini dilanggar?
+- UI tugasnya hanya mengatur tampilan, bukan mengambil data. Jika dilanggar maka kode UI jadi berantakan, aplikasi sulit dites dengan data palsu
+2. Kapan pagination client-side cukup, dan kapan harus mengandalkan pagination server (_page/_limit)?
+- client-side jika total datanya sedikit karena lebih cepat. Server-side jika datanya sangat besar agar tidak membebani hp
+3. Bagaimana exception repository berubah menjadi AsyncError tanpa try/catch di setiap widget? Kapan try/catch eksplisit tetap dibutuhkan?
+- Riverpod otomatis menangkap error saat pertama kali mengambil data di fungsi build(), lalu mengubah statusnya menjadi error. Try/catch manual dibutuhkan saat terjadi aksi dari pengguna, seperti klik tombol refresh, submit formulir, atau pull-to-refresh.
+4. Bagian mana dari hasil AI yang Anda perbaiki, dan mengapa?
+- Ada 4 hal utama yang saya perbaiki:
+    1) Memperbaiki kode provider family agar sesuai dengan API Riverpod versi baru.
+    2) Dihalaman detail, AI memanggil postsProvider yang tidak pernah dibuat. Saya ganti menjadi postListProvider yang benar
+    3) Menghapus banyak import double dan tidak terpakai agar kode bersih
