@@ -35,3 +35,21 @@
 
 3. Sementara ubah baseUrl menjadi URL salah, amati pesan error koneksi. Kembalikan setelah uji.
 ![URL Ganti](week4_api/screenshots/url_ganti.jpg)
+
+
+# Praktikum 3: Pagination dasar
+
+1. Repository paginated
+- Kode ada pada [`lib/data/repositories/post_repository.dart`](week4_api/lib/data/repositories/post_repository.dart)
+
+2. Notifier dengan state halaman
+- Kode ada pada [`lib/data/paged_posts.dart`](week4_api/lib/data/paged_posts.dart)
+
+3. Notifier dengan state halaman (lanjutan)
+- Kode ada pada [`lib/data/paged_posts.dart`](week4_api/lib/data/paged_posts.dart)
+
+4. UI infinite scroll
+- Kode ada pada [`lib/pages/paged_post_page.dart`](week4_api/lib/pages/paged_post_page.dart)
+
+## Ubah home di main.dart menjadi PagedPostPage, jalankan, dan scroll sampai bawah. Amati: halaman 1 tampil dulu, indikator muncul, data bertambah tanpa reload penuh.
+![Indikator Muncul](week4_api/screenshots/indikator_muncul.jpg)
