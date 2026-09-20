@@ -1,6 +1,7 @@
 # Praktikum 1 : Dio dan model data
 
 1. Siapkan Project & Struktur Folder
+
 ![Flutter Create](week4_api/screenshots/flutter_create.png)
 ![Flutter Pub](week4_api/screenshots/flutter_pub.png)
 
@@ -94,3 +95,34 @@ Sebelum kode AI diterima, verifikasi hal berikut dan catat temuan Anda di README
 1. build(int postId) ubah ke build(int arg)
 2. AsyncNotifierProviderFamily<...>() ubah ke CommentListNotifier(arg), ...
 3. widget_test.dart : hapus test boilerplate counter bawaan yang sudah tidak bisa digunakan
+
+
+# Refactor & Testing
+
+## Lakukan refactoring berikut pada project API Anda, lalu commit dengan pesan yang jelas:
+
+1. Ekstrak widget baris post menjadi PostTile tersendiri agar ListView.builder pendek dan mudah diuji.
+2. Pindahkan friendlyErrorMessage ke file lib/data/network_errors.dart agar bisa dipakai ulang halaman paged dan non-paged.
+3. Tambahkan halaman detail post dengan GoRouter (/post/:id) yang menampilkan title dan body lengkap, state detail diambil dari list yang sudah dimuat atau via repository bila langsung dibuka.
+4. Testing: unit test model + mock repository. Buat test/post_test.dart, uji parsing aman null, mapping error, dan provider dengan repository palsu (tanpa internet):
+5. Struktur akhir file test: import + FakePostRepository + main() berisi 4 test. Jalankan flutter analyze & flutter test
+
+## Jawaban
+1. Kode ada pada [`lib/widgets/post_tile.dart`](week4_api/lib/widgets/post_tile.dart)
+2. Kode ada pada [`lib/data/network_errors.dart`](week4_api/lib/data/network_errors.dart)
+3. Kode ada pada [`lib/pages/post_detail_page.dart`](week4_api/lib/pages/post_detail_page.dart)
+4. Kode ada pada [`test/post_test.dart`](week4_api/test/post_test.dart)
+5. ![Hasil Analyze dan Test](week4_api/screenshots/flutter_test&analyze.png)
+
+## Checklist verifikasi mandiri
+1. UI tidak memanggil Dio langsung, semua akses data lewat repository + provider.
+- Iya, semua halaman (post_list_page, paged_post_page, post_detail_page) hanya ref.watch(provider). Dio hanya ada di PostRepository dan CommentRepository
+2. Empat state tampil benar: loading, error (+ retry), empty, success.
+- Iya, ketiga halaman punya postsAsync.when(loading:..., error:..., data:...). Error menampilkan pesan ramah + tombol "Coba lagi". Empty state menampilkan teks "Belum ada data"
+3. Pagination: data bertambah saat scroll, tidak ada request ganda, ada indikator akhir data.
+- Iya, isLoadingMore flag di PagedPostsNotifier mencegah request ganda. hasMore: items.isNotEmpty mendeteksi akhir data dan menampilkan "Semua data termuat." Scroll listener + _loadMoreIfNeeded() memastikan halaman baru dimuat
+4. flutter analyze tanpa issue dan semua test lulus.
+- Hasilnya no issues found dan 10/10 tests passed (6 Comment test + 4 Post test)
+5. Hasil AI diverifikasi dan didokumentasikan pada folder docs/.\
+
+
