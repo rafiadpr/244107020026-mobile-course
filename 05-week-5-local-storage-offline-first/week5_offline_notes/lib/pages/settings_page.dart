@@ -1,22 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../data/prefs.dart';
+import '../data/providers.dart';
 
-final prefsRepositoryProvider = Provider((ref) => PrefsRepository());
-final darkModeProvider =
-    AsyncNotifierProvider<DarkModeNotifier, bool>(DarkModeNotifier.new);
+class SettingsPage extends ConsumerWidget {
+  const SettingsPage({super.key});
 
-class DarkModeNotifier extends AsyncNotifier<bool> {
   @override
-  Future<bool> build() =>
-      ref.watch(prefsRepositoryProvider).getDarkMode();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = ref.watch(darkModeProvider);
 
-  Future<void> toggle() async {
-    final next = !(state.value ?? false);
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
-      await ref.read(prefsRepositoryProvider).setDarkMode(next);
-      return next;
-    });
+    return Scaffold(
+      appBar: AppBar(title: const Text('Settings')),
+      body: ListView(
+        children: [
+          SwitchListTile(
+            title: const Text('Dark Mode'),
+            value: isDark.value ?? false,
+            onChanged: isDark.isLoading
+                ? null
+                : (value) => ref.read(darkModeProvider.notifier).toggle(),
+          ),
+        ],
+      ),
+    );
   }
 }
