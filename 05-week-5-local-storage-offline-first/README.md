@@ -7,6 +7,8 @@
 
 3. Provider dan halaman pengaturan
 - Kode ada pada [`lib/pages/settings_page.dart`](week5_offline_notes/lib/pages/settings_page.dart)
+![Settings Light](week5_offline_notes/screenshots/settings_light.jpg)
+![Settings Dark](week5_offline_notes/screenshots/settings_dark.jpg)
 
 
 # Praktikum 2: SQLite dan repository catatan
@@ -35,10 +37,10 @@
 
 3. Simulasi offline yang deterministik
 - Matikan Wi-Fi / aktifkan mode pesawat, buka kembali aplikasi: catatan tetap tampil, badge dirty tetap akurat.
-![badge jumlah catatan yang belum tersinkron](week5_offline_notes/screenshots/wifi_off.jpg)
+![badge jumlah catatan yang belum tersinkron](week5_offline_notes/screenshots/wifi_off_1.jpg)
 
 - Nyalakan kembali koneksi, jalankan syncNotes: badge kembali ke 0.
-![badge jumlah catatan yang belum tersinkron](week5_offline_notes/screenshots/sync_completed_1.jpg)
+![badge jumlah catatan yang belum tersinkron](week5_offline_notes/screenshots/sync_completed_2.jpg)
 
 - Tuliskan langkah dan hasil observasi Anda (screenshot sebelum/sesudah) ke folder screenshots/
 
@@ -79,6 +81,7 @@ Sebelum rekomendasi AI diterima, verifikasi dan catat temuan Anda di README:
 
 3. Tambahkan halaman detail catatan dengan GoRouter (/note/:id) yang membaca dari repository lokal, bukan dari state halaman list.
 - Kode ada pada [`lib/pages/note_detail_page.dart`](week5_offline_notes/lib/pages/note_detail_page.dart)
+![Detail Catatan](week5_offline_notes/screenshots/detail_note.jpg)
 
 ## Checklist verifikasi mandiri
 

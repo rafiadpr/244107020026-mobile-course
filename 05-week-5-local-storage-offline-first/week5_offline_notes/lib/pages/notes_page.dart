@@ -4,24 +4,24 @@ import 'package:go_router/go_router.dart';
 import '../data/providers.dart';
 import '../data/local/note.dart' as note_model;
 
-
-
 class NotesPage extends ConsumerWidget {
   const NotesPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notesAsync = ref.watch(notesProvider);
-    final dirtyCountAsync = ref.watch(dirtyCountProvider);
+    final dirtyCount = ref.watch(dirtyCountProvider).value ?? 0;
+    final isOffline = ref.watch(forceOfflineProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Offline Notes'),
         actions: [
+          // Tombol Sync dengan badge jumlah dirty
           IconButton(
             icon: Badge(
-              label: Text(dirtyCountAsync.value?.toString() ?? '0'),
-              isLabelVisible: (dirtyCountAsync.value ?? 0) > 0,
+              label: Text(dirtyCount.toString()),
+              isLabelVisible: dirtyCount > 0,
               child: const Icon(Icons.sync),
             ),
             onPressed: () async {
@@ -34,43 +34,81 @@ class NotesPage extends ConsumerWidget {
               ref.invalidate(notesProvider);
               ref.invalidate(dirtyCountProvider);
               if (context.mounted) {
-
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Sync complete!')),
                 );
               }
             },
           ),
+          // Tombol Posts
           IconButton(
             icon: const Icon(Icons.article),
-            onPressed: () {
-              context.push('/posts');
-            },
+            onPressed: () => context.push('/posts'),
           ),
+          // Tombol Settings
           IconButton(
             icon: const Icon(Icons.settings),
-            onPressed: () {
-              context.push('/settings');
-            },
+            onPressed: () => context.push('/settings'),
           ),
-
         ],
       ),
-      body: notesAsync.when(
-        data: (notes) {
-          if (notes.isEmpty) {
-            return const Center(child: Text('No notes. Add one!'));
-          }
-          return ListView.builder(
-            itemCount: notes.length,
-            itemBuilder: (context, index) {
-              final note = notes[index];
-              return NoteTile(note: note);
-            },
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Error: $err')),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Panel Force Offline + Dirty Notes
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                const Text(
+                  'Force Offline',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  isOffline ? 'Simulasi offline aktif' : 'Simulasi online aktif',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isOffline ? Colors.red : Colors.green,
+                  ),
+                ),
+                const Spacer(),
+                Switch(
+                  value: isOffline,
+                  onChanged: (val) {
+                    ref.read(forceOfflineProvider.notifier).setOffline(val);
+                  },
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: Text(
+              'Dirty Notes: $dirtyCount',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            ),
+          ),
+          const Divider(),
+          // Daftar catatan
+          Expanded(
+            child: notesAsync.when(
+              data: (notes) {
+                if (notes.isEmpty) {
+                  return const Center(child: Text('Belum ada catatan. Tambah dulu!'));
+                }
+                return ListView.builder(
+                  itemCount: notes.length,
+                  itemBuilder: (context, index) {
+                    return NoteTile(note: notes[index]);
+                  },
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (err, stack) => Center(child: Text('Error: $err')),
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddNoteDialog(context, ref),
@@ -86,40 +124,38 @@ class NotesPage extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Add Note'),
+        title: const Text('Tambah Catatan'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: titleController,
-              decoration: const InputDecoration(labelText: 'Title'),
+              decoration: const InputDecoration(labelText: 'Judul'),
             ),
             TextField(
               controller: bodyController,
-              decoration: const InputDecoration(labelText: 'Body'),
+              decoration: const InputDecoration(labelText: 'Isi'),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: const Text('Batal'),
           ),
           ElevatedButton(
             onPressed: () async {
-              final title = titleController.text;
-              final body = bodyController.text;
+              final title = titleController.text.trim();
+              final body = bodyController.text.trim();
               if (title.isNotEmpty) {
                 final repo = ref.read(noteRepositoryProvider);
                 await repo.addNote(title: title, body: body);
                 ref.invalidate(notesProvider);
                 ref.invalidate(dirtyCountProvider);
-                if (context.mounted) {
-                  Navigator.pop(context);
-                }
+                if (context.mounted) Navigator.pop(context);
               }
             },
-            child: const Text('Add'),
+            child: const Text('Tambah'),
           ),
         ],
       ),
@@ -136,18 +172,19 @@ class NoteTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return ListTile(
       title: Text(note.title),
-      subtitle: Text(note.body),
+      subtitle: Text(note.body.isEmpty ? '(tidak ada isi)' : note.body),
       onTap: () {
-        if (note.id != null) {
-          context.push('/note/${note.id}');
-        }
+        if (note.id != null) context.push('/note/${note.id}');
       },
       trailing: Row(
-
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (note.dirty)
-            const Icon(Icons.cloud_off, color: Colors.orange, size: 20),
+          // Cloud off = belum sync, cloud done = sudah sync
+          Icon(
+            note.dirty ? Icons.cloud_off : Icons.cloud_done,
+            color: note.dirty ? Colors.orange : Colors.green,
+            size: 22,
+          ),
           IconButton(
             icon: const Icon(Icons.delete, color: Colors.red),
             onPressed: () async {
@@ -164,4 +201,3 @@ class NoteTile extends ConsumerWidget {
     );
   }
 }
-
