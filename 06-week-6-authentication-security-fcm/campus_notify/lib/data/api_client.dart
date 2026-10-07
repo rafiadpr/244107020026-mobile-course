@@ -14,17 +14,33 @@ Dio buildApiClient(TokenStore store, AuthRepository auth) {
     },
     onError: (e, handler) async {
       if (e.response?.statusCode == 401) {
+        // [ANTI-LOOP]: Jika request ini adalah hasil retry, jangan coba refresh lagi
+        if (e.requestOptions.extra['isRetry'] == true) {
+          await store.clear();
+          return handler.next(e);
+        }
+
         final refresh = await store.readRefresh();
-        if (refresh == null) return handler.next(e);
+        if (refresh == null) {
+          await store.clear();
+          return handler.next(e);
+        }
+
         try {
+          // Trigger refresh token tepat SATU KALI
           final renewed = await auth.refresh(refresh);
           await store.save(access: renewed, refresh: refresh);
+
+          // Tandai request dengan flag isRetry sebelum mengirim ulang
+          e.requestOptions.extra['isRetry'] = true;
           final retry = await dio.fetch(
             e.requestOptions..headers['Authorization'] = 'Bearer $renewed',
           );
           return handler.resolve(retry);
         } catch (_) {
-          await store.clear(); // refresh ikut mati -> paksa login ulang
+          // Jika refresh token gagal/kedaluwarsa -> bersihkan sesi & paksa login ulang
+          await store.clear();
+          return handler.next(e);
         }
       }
       handler.next(e);

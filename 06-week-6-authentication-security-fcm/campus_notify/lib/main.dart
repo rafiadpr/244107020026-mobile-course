@@ -9,6 +9,7 @@ import 'pages/home_page.dart';
 import 'pages/login_page.dart';
 import 'providers/auth_provider.dart';
 import 'providers/fcm_provider.dart';
+import 'routes.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authNotifier = ValueNotifier<AsyncValue<bool>>(ref.read(authStateProvider));
@@ -18,7 +19,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   ref.onDispose(authNotifier.dispose);
 
   return GoRouter(
-    initialLocation: '/',
+    initialLocation: AppRoutes.home,
     refreshListenable: authNotifier,
     redirect: (context, state) {
       final authState = ref.read(authStateProvider);
@@ -27,38 +28,37 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (authState.isLoading) return null;
 
       final isLoggedIn = authState.value ?? false;
-      final goingLogin = state.matchedLocation == '/login';
+      final goingLogin = state.matchedLocation == AppRoutes.login;
 
       // Guard 1: Jika belum login dan berada di luar /login, lempar ke /login
-      if (!isLoggedIn && !goingLogin) return '/login';
+      if (!isLoggedIn && !goingLogin) return AppRoutes.login;
 
       // Guard 2: Jika sudah login dan mencoba ke /login, lempar kembali ke home
-      if (isLoggedIn && goingLogin) return '/';
+      if (isLoggedIn && goingLogin) return AppRoutes.home;
 
       return null;
     },
     routes: [
       GoRoute(
-        path: '/login',
+        path: AppRoutes.login,
         builder: (context, state) => const LoginPage(),
       ),
       GoRoute(
-        path: '/',
+        path: AppRoutes.home,
         builder: (context, state) => const HomePage(),
       ),
       GoRoute(
-        path: '/debug',
+        path: AppRoutes.debug,
         builder: (context, state) => const DebugTokenPage(),
       ),
       GoRoute(
-        path: '/announcement/:id',
+        path: AppRoutes.announcement,
         builder: (context, state) => AnnouncementPage(
           id: state.pathParameters['id'] ?? '',
         ),
       ),
-      // Rute /pengumuman/:id sesuai spesifikasi payload backend di Praktikum 3
       GoRoute(
-        path: '/pengumuman/:id',
+        path: AppRoutes.pengumuman,
         builder: (context, state) => AnnouncementPage(
           id: state.pathParameters['id'] ?? '',
         ),
@@ -103,10 +103,10 @@ class _MyAppState extends ConsumerState<MyApp> {
         router.go(route);
       }
 
-      // 1 & 2. Handler Foreground & Background
+      // Handler Foreground & Background
       pushService.listenForegroundAndBackground(navigate);
 
-      // 3. Handler Terminated (aplikasi dibuka dari kondisi mati melalui notifikasi)
+      // Handler Terminated (cold-start)
       pushService.handleTerminated(navigate);
     });
   }

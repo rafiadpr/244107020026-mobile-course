@@ -5,6 +5,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../routes.dart';
 
 // ============================================================================
 // 1. TOP-LEVEL BACKGROUND HANDLER
@@ -82,12 +83,7 @@ class PushService {
 
     final msg = _messaging();
     if (msg != null) {
-      // ----------------------------------------------------------------------
-      // [PERBEDAAN OS]: Izin Runtime Android 13+ vs iOS
-      // ----------------------------------------------------------------------
-      // - iOS: Memerlukan izin eksplisit sistem prompt APNs modal.
-      // - Android 12 kebawah: Izin diberikan otomatis saat instalasi.
-      // - Android 13+ (API 33 / Tiramisu): Diwajibkan meminta izin runtime POST_NOTIFICATIONS.
+      // [PERBEDAAN OS]: Android 13+ vs iOS
       final settings = await msg.requestPermission(
         alert: true,
         announcement: false,
@@ -208,8 +204,9 @@ class PushService {
     // Sistem Android TIDAK memunculkan banner otomatis saat app aktif di layar.
     // Tampilkan banner manual via flutter_local_notifications.
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
-      final targetRoute = message.data['route'] ?? '/';
-      debugPrint('[FCM Foreground] Pesan masuk: ${message.notification?.title}');
+      // Menggunakan pure function routeFromMessage untuk mengekstrak rute
+      final targetRoute = routeFromMessage(message.data);
+      debugPrint('[FCM Foreground] Pesan masuk untuk rute: $targetRoute');
 
       if (!kIsWeb) {
         final notification = message.notification;
@@ -237,7 +234,7 @@ class PushService {
     // --- STATE 2: BACKGROUND (onMessageOpenedApp) ---
     // User mengklik banner notifikasi sistem saat app berada di latar belakang.
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      final targetRoute = message.data['route'] ?? '/';
+      final targetRoute = routeFromMessage(message.data);
       debugPrint('[FCM Background Click] Notifikasi diklik, navigasi ke: $targetRoute');
       go(targetRoute);
     });
@@ -255,7 +252,7 @@ class PushService {
 
     final initialMessage = await msg.getInitialMessage();
     if (initialMessage != null) {
-      final targetRoute = initialMessage.data['route'] ?? '/';
+      final targetRoute = routeFromMessage(initialMessage.data);
       debugPrint('[FCM Terminated Click] Membuka deep link: $targetRoute');
       navigate?.call(targetRoute);
     }
