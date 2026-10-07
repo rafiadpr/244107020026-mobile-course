@@ -76,7 +76,7 @@ class DebugTokenPage extends ConsumerWidget {
 
                     const SizedBox(height: 12),
 
-                    // Copy Full Token Button (berguna untuk testing Firebase Console)
+                    // Copy Full Token Button
                     if (fcmState.token != null)
                       ElevatedButton.icon(
                         icon: const Icon(Icons.copy, size: 18),
@@ -144,7 +144,43 @@ class DebugTokenPage extends ConsumerWidget {
               ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
+
+            // Card Topic Messaging (Praktikum 3: Topic)
+            Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              child: SwitchListTile(
+                secondary: const Icon(Icons.campaign, color: Colors.deepPurple),
+                title: const Text('Topik: pengumuman-kampus'),
+                subtitle: Text(
+                  fcmState.isSubscribedToTopic
+                      ? 'Status: Berlangganan (Akan menerima broadcast)'
+                      : 'Status: Tidak berlangganan',
+                  style: TextStyle(
+                    color: fcmState.isSubscribedToTopic ? Colors.green : Colors.grey,
+                    fontSize: 13,
+                  ),
+                ),
+                value: fcmState.isSubscribedToTopic,
+                onChanged: fcmState.isLoading
+                    ? null
+                    : (val) async {
+                        await fcmNotifier.toggleCampusTopic(val);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(val
+                                  ? 'Berhasil subscribe ke topik pengumuman-kampus!'
+                                  : 'Berhenti berlangganan dari pengumuman-kampus.'),
+                            ),
+                          );
+                        }
+                      },
+              ),
+            ),
+
+            const SizedBox(height: 16),
 
             // Tombol Trigger Refresh Token Langsung (Testing Helper)
             SizedBox(
@@ -170,7 +206,7 @@ class DebugTokenPage extends ConsumerWidget {
 
             const SizedBox(height: 24),
 
-            // Petunjuk Pengujian Praktikum
+            // Petunjuk Pengujian Praktikum 3
             Card(
               color: Colors.blue.shade50,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -184,17 +220,16 @@ class DebugTokenPage extends ConsumerWidget {
                         Icon(Icons.info_outline, color: Colors.blue),
                         SizedBox(width: 8),
                         Text(
-                          'Panduan Uji Coba onTokenRefresh',
+                          'Matriks Pengujian Praktikum 3',
                           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
                         ),
                       ],
                     ),
                     SizedBox(height: 8),
                     Text(
-                      '1. Catat 12 karakter pertama token di atas.\n'
-                      '2. Masuk ke App Info (Info Aplikasi) di emulator/HP.\n'
-                      '3. Pilih Storage (Penyimpanan) -> Hapus Data (Clear Data) atau Uninstall & Reinstall.\n'
-                      '4. Buka kembali aplikasi dan amati bahwa 12 karakter token berubah dan status sinkronisasi backend langsung terbarui otomatis.',
+                      '1. Foreground: Aplikasi terbuka, kirim pesan -> Banner lokal muncul -> Klik banner membuka /pengumuman/3.\n\n'
+                      '2. Background: Tekan tombol Home, kirim pesan -> Banner sistem muncul -> Klik banner membuka /pengumuman/3.\n\n'
+                      '3. Terminated: Swipe-close / kill aplikasi, kirim pesan -> Klik banner membuka aplikasi langsung ke /pengumuman/3.',
                       style: TextStyle(fontSize: 13, height: 1.4),
                     ),
                   ],
