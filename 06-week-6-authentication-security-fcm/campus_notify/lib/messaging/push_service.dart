@@ -4,14 +4,21 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-/// 1. Background Handler Top-Level (Wajib @pragma('vm:entry-point'))
-/// Berjalan di isolate terpisah dari thread UI utama.
-/// Jangan mengakses BuildContext atau Riverpod di sini.
+// ============================================================================
+// 1. TOP-LEVEL BACKGROUND HANDLER
+// ============================================================================
+
+/// [PERINGATAN ISOLATE]:
+/// Fungsi ini WAJIB berada di top-level (di luar class) dengan anotasi @pragma('vm:entry-point').
+/// Fungsi ini dieksekusi di background isolate terpisah oleh OS.
+/// DILARANG KERAS mengakses `BuildContext`, widget tree, atau state Riverpod UI di sini!
+/// Navigasi dilakukan saat banner diklik oleh pengguna.
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
-  debugPrint('[FCM Background Isolate] Pesan diterima: ${message.messageId}');
+  debugPrint('[FCM Background Isolate] Pesan diterima ID: ${message.messageId}');
   debugPrint('[FCM Background Isolate] Data payload: ${message.data}');
 }
 
@@ -24,23 +31,40 @@ void registerBackgroundHandler() {
   }
 }
 
+// ============================================================================
+// 2. SERVICE CLASS: PushService
+// ============================================================================
+
 class PushService {
   final FirebaseMessaging? _customMessaging;
-  final FlutterLocalNotificationsPlugin _localNotifications;
+  final FlutterLocalNotificationsPlugin _local;
   final Dio? dio;
+  final FlutterSecureStorage _storage;
 
   // Callback navigasi yang terhubung ke GoRouter
   void Function(String route)? _navigateCallback;
+
+  static const String campusTopic = 'pengumuman-kampus';
+
+  // Notification Channel Android untuk Android 8.0+ (Oreo ke atas)
+  static const AndroidNotificationChannel _androidChannel =
+      AndroidNotificationChannel(
+    'pengumuman_channel',
+    'Pengumuman Kampus',
+    description: 'Channel untuk notifikasi pengumuman resmi kampus',
+    importance: Importance.max,
+  );
 
   PushService({
     FirebaseMessaging? messaging,
     FlutterLocalNotificationsPlugin? localNotifications,
     this.dio,
+    FlutterSecureStorage? storage,
   })  : _customMessaging = messaging,
-        _localNotifications =
-            localNotifications ?? FlutterLocalNotificationsPlugin();
+        _local = localNotifications ?? FlutterLocalNotificationsPlugin(),
+        _storage = storage ?? const FlutterSecureStorage();
 
-  // Helper untuk mendapatkan FirebaseMessaging secara aman (misal saat widget test/desktop)
+  // Helper untuk mendapatkan FirebaseMessaging secara aman (misal saat widget test)
   FirebaseMessaging? _messaging() {
     try {
       return _customMessaging ?? FirebaseMessaging.instance;
@@ -50,19 +74,20 @@ class PushService {
     }
   }
 
-  // Notification Channel Android untuk notifikasi pengumuman
-  static const AndroidNotificationChannel _channel = AndroidNotificationChannel(
-    'pengumuman', // id channel
-    'Pengumuman Kampus', // nama channel
-    description: 'Channel ini digunakan untuk notifikasi pengumuman kampus.',
-    importance: Importance.max,
-  );
-
   /// Inisialisasi awal: request permission, channel, dan local notification
-  Future<void> initialize() async {
+  Future<void> initialize({void Function(String route)? onNavigate}) async {
+    if (onNavigate != null) {
+      _navigateCallback = onNavigate;
+    }
+
     final msg = _messaging();
     if (msg != null) {
-      // 1. Request permission untuk Android 13+ dan iOS
+      // ----------------------------------------------------------------------
+      // [PERBEDAAN OS]: Izin Runtime Android 13+ vs iOS
+      // ----------------------------------------------------------------------
+      // - iOS: Memerlukan izin eksplisit sistem prompt APNs modal.
+      // - Android 12 kebawah: Izin diberikan otomatis saat instalasi.
+      // - Android 13+ (API 33 / Tiramisu): Diwajibkan meminta izin runtime POST_NOTIFICATIONS.
       final settings = await msg.requestPermission(
         alert: true,
         announcement: false,
@@ -72,92 +97,174 @@ class PushService {
         provisional: false,
         sound: true,
       );
-      debugPrint('[FCM] Status izin notifikasi: ${settings.authorizationStatus}');
+      debugPrint('[PushService] Status izin notifikasi: ${settings.authorizationStatus}');
     }
 
-    // 2. Setup Flutter Local Notifications
+    // Setup Local Notifications untuk Heads-Up banner di foreground
     const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const initSettings = InitializationSettings(android: androidSettings);
+    const iosSettings = DarwinInitializationSettings(
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
+    );
 
-    await _localNotifications.initialize(
-      settings: initSettings,
-      onDidReceiveNotificationResponse: (response) {
-        debugPrint('[LocalNotif Click] Banner diklik dengan payload: ${response.payload}');
-        if (response.payload != null && response.payload!.isNotEmpty) {
-          _navigateCallback?.call(response.payload!);
+    await _local.initialize(
+      settings: const InitializationSettings(
+        android: androidSettings,
+        iOS: iosSettings,
+      ),
+      onDidReceiveNotificationResponse: (NotificationResponse response) {
+        final payloadRoute = response.payload;
+        debugPrint('[LocalNotif Click] Banner diklik dengan payload: $payloadRoute');
+        if (payloadRoute != null && payloadRoute.isNotEmpty) {
+          _navigateCallback?.call(payloadRoute);
         }
       },
     );
 
-    // 3. Daftarkan notification channel ke sistem Android
-    await _localNotifications
+    // Daftarkan Channel khusus Android
+    await _local
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(_channel);
+        ?.createNotificationChannel(_androidChannel);
 
-    // 4. Registrasi top-level background handler
+    // Daftarkan background handler top-level
     registerBackgroundHandler();
+
+    // Jika onNavigate diberikan langsung di initialize
+    if (_navigateCallback != null) {
+      listenForegroundAndBackground(_navigateCallback!);
+      await handleTerminated(_navigateCallback);
+    }
   }
 
-  /// 2. Tiga Handler State Aplikasi (Foreground, Background, dan Terminated)
-  /// Mengikat listener ke callback `go(route)` GoRouter.
+  // --------------------------------------------------------------------------
+  // TOKEN LIFECYCLE & SINKRONISASI (POST /devices)
+  // --------------------------------------------------------------------------
+
+  /// Mengambil Token FCM saat ini
+  Future<String?> getToken() async {
+    final msg = _messaging();
+    if (msg == null) return null;
+    try {
+      final token = await msg.getToken();
+      if (token != null) {
+        // [KEAMANAN LOG]: Hanya menampilkan masked 12 karakter pertama di log
+        final masked = token.length > 12 ? '${token.substring(0, 12)}...' : token;
+        debugPrint('[PushService] Token FCM saat ini: $masked');
+      }
+      return token;
+    } catch (e) {
+      debugPrint('[PushService] Gagal mengambil token: $e');
+      return null;
+    }
+  }
+
+  /// Stream listener ketika token FCM di-refresh
+  Stream<String> get onTokenRefresh {
+    final msg = _messaging();
+    return msg?.onTokenRefresh ?? const Stream.empty();
+  }
+
+  /// Mengirimkan FCM Token ke Endpoint Backend POST /devices
+  Future<bool> syncTokenToBackend(String token) async {
+    try {
+      // Keamanan: Simpan token secara terenkripsi ke FlutterSecureStorage
+      await _storage.write(key: 'fcm_device_token', value: token);
+
+      // [KEAMANAN LOG]: Hanya mencetak 12 karakter pertama (masked), BUKAN token utuh!
+      final masked = token.length > 12 ? '${token.substring(0, 12)}...' : token;
+      debugPrint('[PushService] Mengirim token ($masked) ke endpoint POST /devices');
+
+      if (dio != null) {
+        await dio!.post(
+          '/devices',
+          data: {
+            'fcm_token': token,
+            'platform': defaultTargetPlatform.name,
+            'updated_at': DateTime.now().toIso8601String(),
+          },
+        );
+      } else {
+        await Future.delayed(const Duration(milliseconds: 300));
+      }
+      return true;
+    } catch (e) {
+      debugPrint('[PushService] Mock fallback POST /devices ($e)');
+      return true;
+    }
+  }
+
+  // --------------------------------------------------------------------------
+  // STATE 1 & 2: FOREGROUND & BACKGROUND LISTENER
+  // --------------------------------------------------------------------------
+
   void listenForegroundAndBackground(void Function(String route) go) {
     _navigateCallback = go;
     final msg = _messaging();
     if (msg == null) return;
 
-    // --- STATE 1: FOREGROUND ---
-    // Sistem Android TIDAK memunculkan banner otomatis saat app sedang aktif di layar.
-    // Tangkap via onMessage.listen lalu buat banner manual via flutter_local_notifications.
+    // --- STATE 1: FOREGROUND (onMessage) ---
+    // Sistem Android TIDAK memunculkan banner otomatis saat app aktif di layar.
+    // Tampilkan banner manual via flutter_local_notifications.
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
-      final route = message.data['route'] ?? '/';
+      final targetRoute = message.data['route'] ?? '/';
       debugPrint('[FCM Foreground] Pesan masuk: ${message.notification?.title}');
 
       if (!kIsWeb) {
+        final notification = message.notification;
         final android = message.notification?.android;
-        await _localNotifications.show(
+
+        await _local.show(
           id: message.hashCode,
-          title: message.notification?.title ?? 'Pengumuman',
-          body: message.notification?.body ?? '',
+          title: notification?.title ?? 'Pengumuman Baru',
+          body: notification?.body ?? '',
           notificationDetails: NotificationDetails(
             android: AndroidNotificationDetails(
-              _channel.id,
-              _channel.name,
-              channelDescription: _channel.description,
+              _androidChannel.id,
+              _androidChannel.name,
+              channelDescription: _androidChannel.description,
               icon: android?.smallIcon ?? '@mipmap/ic_launcher',
               importance: Importance.max,
               priority: Priority.high,
             ),
           ),
-          payload: route,
+          payload: targetRoute,
         );
       }
     });
 
-    // --- STATE 2: BACKGROUND ---
-    // Pengguna mengklik banner notifikasi sistem saat aplikasi berada di latar belakang.
+    // --- STATE 2: BACKGROUND (onMessageOpenedApp) ---
+    // User mengklik banner notifikasi sistem saat app berada di latar belakang.
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      final route = message.data['route'] ?? '/';
-      debugPrint('[FCM Background Click] Notifikasi diklik, navigasi ke: $route');
-      go(route);
+      final targetRoute = message.data['route'] ?? '/';
+      debugPrint('[FCM Background Click] Notifikasi diklik, navigasi ke: $targetRoute');
+      go(targetRoute);
     });
   }
 
-  /// --- STATE 3: TERMINATED ---
-  /// Menangani saat aplikasi dibuka dari keadaan mati (swipe-close) melalui notifikasi.
-  Future<void> handleTerminated(void Function(String route) go) async {
+  // --------------------------------------------------------------------------
+  // STATE 3: TERMINATED (getInitialMessage)
+  // --------------------------------------------------------------------------
+
+  /// Menangani saat aplikasi dibuka dari keadaan mati (swipe-close) via notifikasi.
+  Future<void> handleTerminated([void Function(String route)? go]) async {
+    final navigate = go ?? _navigateCallback;
     final msg = _messaging();
     if (msg == null) return;
 
     final initialMessage = await msg.getInitialMessage();
     if (initialMessage != null) {
-      final route = initialMessage.data['route'] ?? '/';
-      debugPrint('[FCM Terminated Click] Membuka deep link notifikasi: $route');
-      go(route);
+      final targetRoute = initialMessage.data['route'] ?? '/';
+      debugPrint('[FCM Terminated Click] Membuka deep link: $targetRoute');
+      navigate?.call(targetRoute);
     }
   }
 
-  /// 4. Topic Messaging: Berlangganan topik
+  // --------------------------------------------------------------------------
+  // TOPIC MESSAGING (pengumuman-kampus)
+  // --------------------------------------------------------------------------
+
   Future<void> subscribeToTopic(String topic) async {
     final msg = _messaging();
     if (msg == null) return;
@@ -169,7 +276,6 @@ class PushService {
     }
   }
 
-  /// 4. Topic Messaging: Berhenti berlangganan topik
   Future<void> unsubscribeFromTopic(String topic) async {
     final msg = _messaging();
     if (msg == null) return;
@@ -181,51 +287,18 @@ class PushService {
     }
   }
 
-  /// Mengambil Token FCM saat ini
-  Future<String?> getToken() async {
-    final msg = _messaging();
-    if (msg == null) return null;
-    try {
-      final token = await msg.getToken();
-      debugPrint('[FCM] Token saat ini: $token');
-      return token;
-    } catch (e) {
-      debugPrint('[FCM] Gagal mengambil token: $e');
-      return null;
-    }
-  }
+  // Method spesifik sesuai topik kampus
+  Future<void> subscribeCampusTopic() => subscribeToTopic(campusTopic);
+  Future<void> unsubscribeCampusTopic() => unsubscribeFromTopic(campusTopic);
 
-  /// Stream pembaruan token
-  Stream<String> get onTokenRefresh {
-    final msg = _messaging();
-    return msg?.onTokenRefresh ?? const Stream.empty();
-  }
+  // --------------------------------------------------------------------------
+  // TESTING HELPER
+  // --------------------------------------------------------------------------
 
-  /// Sinkronisasi token ke backend via Dio
-  Future<bool> syncTokenToBackend(String token) async {
-    try {
-      if (dio != null) {
-        await dio!.post(
-          '/devices/fcm-token',
-          data: {
-            'fcm_token': token,
-            'platform': defaultTargetPlatform.name,
-            'synced_at': DateTime.now().toIso8601String(),
-          },
-        );
-      } else {
-        await Future.delayed(const Duration(milliseconds: 300));
-      }
-      return true;
-    } catch (e) {
-      return true;
-    }
-  }
-
-  /// Hapus instance token (helper simulasi testing)
   Future<void> deleteToken() async {
     final msg = _messaging();
     if (msg == null) return;
     await msg.deleteToken();
+    debugPrint('[PushService] Token FCM dihapus dari cache perangkat.');
   }
 }
