@@ -8,6 +8,7 @@ import 'pages/debug_token_page.dart';
 import 'pages/home_page.dart';
 import 'pages/login_page.dart';
 import 'providers/auth_provider.dart';
+import 'providers/fcm_provider.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authNotifier = ValueNotifier<AsyncValue<bool>>(ref.read(authStateProvider));
@@ -55,6 +56,13 @@ final routerProvider = Provider<GoRouter>((ref) {
           id: state.pathParameters['id'] ?? '',
         ),
       ),
+      // Rute /pengumuman/:id sesuai spesifikasi payload backend di Praktikum 3
+      GoRoute(
+        path: '/pengumuman/:id',
+        builder: (context, state) => AnnouncementPage(
+          id: state.pathParameters['id'] ?? '',
+        ),
+      ),
     ],
   );
 });
@@ -74,11 +82,37 @@ void main() async {
   );
 }
 
-class MyApp extends ConsumerWidget {
+class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends ConsumerState<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    // Inisialisasi listener navigasi FCM setelah frame UI pertama siap
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final pushService = ref.read(pushServiceProvider);
+      final router = ref.read(routerProvider);
+
+      void navigate(String route) {
+        debugPrint('[FCM Navigation] Berpindah ke rute: $route');
+        router.go(route);
+      }
+
+      // 1 & 2. Handler Foreground & Background
+      pushService.listenForegroundAndBackground(navigate);
+
+      // 3. Handler Terminated (aplikasi dibuka dari kondisi mati melalui notifikasi)
+      pushService.handleTerminated(navigate);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
 
     return MaterialApp.router(
