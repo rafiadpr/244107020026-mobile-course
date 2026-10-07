@@ -56,6 +56,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                const Icon(Icons.school, size: 72, color: Colors.blue),
+                const SizedBox(height: 12),
+                const Text(
+                  'Campus Notify',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Silakan masuk dengan akun kampus Anda',
+                  style: TextStyle(color: Colors.grey),
+                ),
                 const SizedBox(height: 24),
                 TextFormField(
                   controller: _emailController,
