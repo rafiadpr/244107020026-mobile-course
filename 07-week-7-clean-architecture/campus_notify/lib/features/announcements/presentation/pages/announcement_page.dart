@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class AnnouncementPage extends StatelessWidget {
+import '../providers/announcement_provider.dart';
+
+class AnnouncementPage extends ConsumerWidget {
   const AnnouncementPage({super.key, required this.id});
 
   final String id;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final dateLabel = ref.watch(announcementDateLabelProvider);
     return Scaffold(
       appBar: AppBar(
         title: Text('Pengumuman #$id'),
@@ -51,7 +55,7 @@ class AnnouncementPage extends StatelessWidget {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Dipublikasikan: ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}',
+                                dateLabel,
                                 style: TextStyle(
                                   color: Colors.grey.shade600,
                                   fontSize: 12,

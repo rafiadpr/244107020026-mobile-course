@@ -39,7 +39,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       if (next.hasError) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(next.error.toString()),
+            content: Text(next.errorMessage ?? ''),
             backgroundColor: Colors.red,
           ),
         );

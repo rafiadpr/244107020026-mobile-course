@@ -3,7 +3,8 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../core/providers.dart';
+import '../messaging/providers.dart';
+import '../core/presentation/formatters/date_labels.dart';
 
 class FcmState {
   final String? token;
@@ -47,6 +48,8 @@ class FcmState {
     );
   }
 
+  String? get lastUpdatedLabel =>
+      lastUpdatedAt == null ? null : localTimestampLabel(lastUpdatedAt!);
 }
 
 // NotifierProvider untuk state token FCM

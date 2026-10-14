@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../providers/fcm_provider.dart';
 
 class DebugTokenPage extends ConsumerWidget {
@@ -24,7 +25,9 @@ class DebugTokenPage extends ConsumerWidget {
             // Card Status Token
             Card(
               elevation: 3,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
@@ -36,7 +39,10 @@ class DebugTokenPage extends ConsumerWidget {
                         const SizedBox(width: 8),
                         const Text(
                           'FCM Token Status',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         const Spacer(),
                         if (fcmState.isLoading)
@@ -52,7 +58,10 @@ class DebugTokenPage extends ConsumerWidget {
                     // Tampilan Token Terpotong (Syarat Wajib Praktikum: 12 Karakter)
                     const Text(
                       'FCM Token (12 Karakter Pertama):',
-                      style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black54),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black54,
+                      ),
                     ),
                     const SizedBox(height: 6),
                     Container(
@@ -80,12 +89,18 @@ class DebugTokenPage extends ConsumerWidget {
                     if (fcmState.token != null)
                       ElevatedButton.icon(
                         icon: const Icon(Icons.copy, size: 18),
-                        label: const Text('Salin Token Penuh untuk Firebase Console'),
+                        label: const Text(
+                          'Salin Token Penuh untuk Firebase Console',
+                        ),
                         onPressed: () {
-                          Clipboard.setData(ClipboardData(text: fcmState.token!));
+                          Clipboard.setData(
+                            ClipboardData(text: fcmState.token!),
+                          );
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('Token FCM penuh berhasil disalin ke clipboard!'),
+                              content: Text(
+                                'Token FCM penuh berhasil disalin ke clipboard!',
+                              ),
                               backgroundColor: Colors.green,
                             ),
                           );
@@ -104,24 +119,37 @@ class DebugTokenPage extends ConsumerWidget {
                         const SizedBox(width: 8),
                         Chip(
                           avatar: Icon(
-                            fcmState.isSynced ? Icons.check_circle : Icons.error,
+                            fcmState.isSynced
+                                ? Icons.check_circle
+                                : Icons.error,
                             size: 16,
                             color: Colors.white,
                           ),
                           label: Text(
-                            fcmState.isSynced ? 'TERHUBUNG (OK)' : 'BELUM SINKRON',
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                            fcmState.isSynced
+                                ? 'TERHUBUNG (OK)'
+                                : 'BELUM SINKRON',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
                           ),
-                          backgroundColor: fcmState.isSynced ? Colors.green : Colors.red,
+                          backgroundColor: fcmState.isSynced
+                              ? Colors.green
+                              : Colors.red,
                         ),
                       ],
                     ),
 
-                    if (fcmState.lastUpdatedAt != null) ...[
+                    if (fcmState.lastUpdatedLabel != null) ...[
                       const SizedBox(height: 8),
                       Text(
-                        'Pembaruan Terakhir: ${fcmState.lastUpdatedAt!.toLocal()}',
-                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                        'Pembaruan Terakhir: ${fcmState.lastUpdatedLabel}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                        ),
                       ),
                     ],
 
@@ -135,7 +163,10 @@ class DebugTokenPage extends ConsumerWidget {
                         ),
                         child: Text(
                           fcmState.errorMessage!,
-                          style: TextStyle(color: Colors.red.shade700, fontSize: 13),
+                          style: TextStyle(
+                            color: Colors.red.shade700,
+                            fontSize: 13,
+                          ),
                         ),
                       ),
                     ],
@@ -149,7 +180,9 @@ class DebugTokenPage extends ConsumerWidget {
             // Card Topic Messaging (Praktikum 3: Topic)
             Card(
               elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: SwitchListTile(
                 secondary: const Icon(Icons.campaign, color: Colors.deepPurple),
                 title: const Text('Topik: pengumuman-kampus'),
@@ -158,7 +191,9 @@ class DebugTokenPage extends ConsumerWidget {
                       ? 'Status: Berlangganan (Akan menerima broadcast)'
                       : 'Status: Tidak berlangganan',
                   style: TextStyle(
-                    color: fcmState.isSubscribedToTopic ? Colors.green : Colors.grey,
+                    color: fcmState.isSubscribedToTopic
+                        ? Colors.green
+                        : Colors.grey,
                     fontSize: 13,
                   ),
                 ),
@@ -170,9 +205,11 @@ class DebugTokenPage extends ConsumerWidget {
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text(val
-                                  ? 'Berhasil subscribe ke topik pengumuman-kampus!'
-                                  : 'Berhenti berlangganan dari pengumuman-kampus.'),
+                              content: Text(
+                                val
+                                    ? 'Berhasil subscribe ke topik pengumuman-kampus!'
+                                    : 'Berhenti berlangganan dari pengumuman-kampus.',
+                              ),
                             ),
                           );
                         }
@@ -188,7 +225,9 @@ class DebugTokenPage extends ConsumerWidget {
               height: 48,
               child: OutlinedButton.icon(
                 icon: const Icon(Icons.refresh),
-                label: const Text('Simulasi Trigger onTokenRefresh (Hapus & Buat Baru)'),
+                label: const Text(
+                  'Simulasi Trigger onTokenRefresh (Hapus & Buat Baru)',
+                ),
                 onPressed: fcmState.isLoading
                     ? null
                     : () async {
@@ -196,7 +235,9 @@ class DebugTokenPage extends ConsumerWidget {
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('Permintaan refresh token telah dikirim!'),
+                              content: Text(
+                                'Permintaan refresh token telah dikirim!',
+                              ),
                             ),
                           );
                         }
@@ -209,7 +250,9 @@ class DebugTokenPage extends ConsumerWidget {
             // Petunjuk Pengujian Praktikum 3
             Card(
               color: Colors.blue.shade50,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: const Padding(
                 padding: EdgeInsets.all(16.0),
                 child: Column(
@@ -221,7 +264,10 @@ class DebugTokenPage extends ConsumerWidget {
                         SizedBox(width: 8),
                         Text(
                           'Matriks Pengujian Praktikum 3',
-                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue,
+                          ),
                         ),
                       ],
                     ),
