@@ -158,3 +158,14 @@ Hasil verifikasi perubahan: analyzer bersih dan **24 test lulus**. Grep membukti
 Pola Domain/Data diterapkan pada notifikasi pengumuman yang sudah ada. Use case RegisterDevice mengatur pengambilan dan sinkronisasi token, termasuk force refresh. Formatting tanggal dan parsing route dipindahkan ke core/format.dart.
 
 Analyzer bersih dan **32 tes lulus**. [Catatan singkat dan screenshot](campus_notify/docs/refactoring/README.md).
+
+
+## Refleksi
+1. Mengapa interface repository berada di domain?
+   Agar domain menentukan kebutuhan bisnis tanpa bergantung pada cara data disimpan atau diambil. Jika interface berada di data, domain harus bergantung pada layer data sehingga aturan dependensi terbalik.
+2. Kapan use case diperlukan?
+   Use case diperlukan ketika ada beberapa langkah atau aturan bisnis, seperti RegisterDevice yang mengambil token lalu menyinkronkannya. Jika operasinya hanya satu pemanggilan sederhana, notifier cukup menggunakan interface repository langsung.
+3. Apa biaya over-engineering bagi tim kecil?
+   Terlalu banyak class membuat kode lebih lama ditulis dan lebih sulit ditelusuri. Biayanya sepadan jika proses bisnis cukup rumit atau logikanya digunakan di beberapa tempat.
+4. Bagian usulan AI yang saya sederhanakan?
+   Saya menghapus use case auth yang hanya meneruskan satu pemanggilan repository. Saya juga mengurangi tes dan dokumentasi tambahan agar tetap sesuai kebutuhan praktikum dan lebih mudah dipahami.
