@@ -1,14 +1,17 @@
 import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 
 import 'package:campus_notify/routes.dart';
-import 'package:campus_notify/data/token_store.dart';
-import 'package:campus_notify/data/auth_repository.dart';
+import 'package:campus_notify/features/auth/data/datasources/token_store.dart';
+import 'package:campus_notify/features/auth/data/datasources/mock_auth_data_source.dart';
+import 'package:campus_notify/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:campus_notify/data/api_client.dart';
 import 'package:campus_notify/data/api_errors.dart';
-import 'package:campus_notify/providers/auth_provider.dart';
+import 'package:campus_notify/core/providers.dart';
+import 'package:campus_notify/features/auth/presentation/providers/auth_provider.dart';
 
 /// Fake in-memory TokenStore untuk pengujian unit test tanpa native platform
 class FakeTokenStore implements TokenStore {
@@ -40,7 +43,7 @@ class FakeTokenStore implements TokenStore {
 }
 
 /// Fake AuthRepository yang sengaja gagal pada refresh untuk menguji session expire
-class FailingAuthRepository extends AuthRepository {
+class FailingAuthDataSource extends MockAuthDataSource {
   @override
   Future<String> refresh(String refreshToken) async {
     throw Exception('Refresh token expired or revoked');
@@ -98,9 +101,7 @@ void main() {
       );
 
       final container = ProviderContainer(
-        overrides: [
-          tokenStoreProvider.overrideWithValue(fakeStore),
-        ],
+        overrides: [tokenStoreProvider.overrideWithValue(fakeStore)],
       );
       addTearDown(container.dispose);
 
@@ -108,42 +109,44 @@ void main() {
       expect(authState, isTrue);
     });
 
-    test('AuthNotifier membaca status unauthenticated (false) jika token kosong', () async {
-      final fakeStore = FakeTokenStore(access: null, refresh: null);
+    test(
+      'AuthNotifier membaca status unauthenticated (false) jika token kosong',
+      () async {
+        final fakeStore = FakeTokenStore(access: null, refresh: null);
 
-      final container = ProviderContainer(
-        overrides: [
-          tokenStoreProvider.overrideWithValue(fakeStore),
-        ],
-      );
-      addTearDown(container.dispose);
+        final container = ProviderContainer(
+          overrides: [tokenStoreProvider.overrideWithValue(fakeStore)],
+        );
+        addTearDown(container.dispose);
 
-      final authState = await container.read(authStateProvider.future);
-      expect(authState, isFalse);
-    });
+        final authState = await container.read(authStateProvider.future);
+        expect(authState, isFalse);
+      },
+    );
 
-    test('Logout membersihkan token di store dan mengubah state ke false', () async {
-      final fakeStore = FakeTokenStore(
-        access: 'mock-access-token',
-        refresh: 'mock-refresh-token',
-      );
+    test(
+      'Logout membersihkan token di store dan mengubah state ke false',
+      () async {
+        final fakeStore = FakeTokenStore(
+          access: 'mock-access-token',
+          refresh: 'mock-refresh-token',
+        );
 
-      final container = ProviderContainer(
-        overrides: [
-          tokenStoreProvider.overrideWithValue(fakeStore),
-        ],
-      );
-      addTearDown(container.dispose);
+        final container = ProviderContainer(
+          overrides: [tokenStoreProvider.overrideWithValue(fakeStore)],
+        );
+        addTearDown(container.dispose);
 
-      expect(await container.read(authStateProvider.future), isTrue);
+        expect(await container.read(authStateProvider.future), isTrue);
 
-      // Panggil logout
-      await container.read(authStateProvider.notifier).logout();
+        // Panggil logout
+        await container.read(authStateProvider.notifier).logout();
 
-      expect(fakeStore.isCleared, isTrue);
-      expect(fakeStore.access, isNull);
-      expect(await container.read(authStateProvider.future), isFalse);
-    });
+        expect(fakeStore.isCleared, isTrue);
+        expect(fakeStore.access, isNull);
+        expect(await container.read(authStateProvider.future), isFalse);
+      },
+    );
   });
 
   group('3. Unit Test Token Refresh Gagal & Interceptor 401', () {
@@ -152,7 +155,10 @@ void main() {
         access: 'expired-access-token',
         refresh: 'expired-refresh-token',
       );
-      final failingAuth = FailingAuthRepository();
+      final failingAuth = AuthRepositoryImpl(
+        source: FailingAuthDataSource(),
+        store: fakeStore,
+      );
       final dio = buildApiClient(fakeStore, failingAuth);
       dio.httpClientAdapter = Mock401Adapter();
 
@@ -167,38 +173,47 @@ void main() {
       expect(fakeStore.refresh, isNull);
     });
 
-    test('ApiErrors memetakan DioException 401 menjadi pesan sesi kedaluwarsa', () {
-      final dioException = DioException(
-        requestOptions: RequestOptions(path: '/test'),
-        response: Response(
+    test(
+      'ApiErrors memetakan DioException 401 menjadi pesan sesi kedaluwarsa',
+      () {
+        final dioException = DioException(
           requestOptions: RequestOptions(path: '/test'),
-          statusCode: 401,
-        ),
-        type: DioExceptionType.badResponse,
-      );
+          response: Response(
+            requestOptions: RequestOptions(path: '/test'),
+            statusCode: 401,
+          ),
+          type: DioExceptionType.badResponse,
+        );
 
-      final message = ApiErrors.mapDioError(dioException);
-      expect(message, contains('Sesi Anda telah berakhir'));
-    });
+        final message = ApiErrors.mapDioError(dioException);
+        expect(message, contains('Sesi Anda telah berakhir'));
+      },
+    );
 
-    test('ApiErrors memetakan DioException timeout menjadi pesan koneksi timeout', () {
-      final dioException = DioException(
-        requestOptions: RequestOptions(path: '/test'),
-        type: DioExceptionType.connectionTimeout,
-      );
+    test(
+      'ApiErrors memetakan DioException timeout menjadi pesan koneksi timeout',
+      () {
+        final dioException = DioException(
+          requestOptions: RequestOptions(path: '/test'),
+          type: DioExceptionType.connectionTimeout,
+        );
 
-      final message = ApiErrors.mapDioError(dioException);
-      expect(message, contains('timeout'));
-    });
+        final message = ApiErrors.mapDioError(dioException);
+        expect(message, contains('timeout'));
+      },
+    );
 
-    test('ApiErrors memetakan DioException connection error menjadi pesan offline', () {
-      final dioException = DioException(
-        requestOptions: RequestOptions(path: '/test'),
-        type: DioExceptionType.connectionError,
-      );
+    test(
+      'ApiErrors memetakan DioException connection error menjadi pesan offline',
+      () {
+        final dioException = DioException(
+          requestOptions: RequestOptions(path: '/test'),
+          type: DioExceptionType.connectionError,
+        );
 
-      final message = ApiErrors.mapDioError(dioException);
-      expect(message, contains('Tidak dapat terhubung ke server'));
-    });
+        final message = ApiErrors.mapDioError(dioException);
+        expect(message, contains('Tidak dapat terhubung ke server'));
+      },
+    );
   });
 }

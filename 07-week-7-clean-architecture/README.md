@@ -72,3 +72,65 @@ lib/
 ```
 
 Urutan: pisahkan entity/kontrak/model dan implementasi auth; pindahkan akses token ke repository; sambungkan pemanggil lama ke Record/use case; rapikan DI/presentation; verifikasi dependency, analyzer dan test. Tidak menambahkan notes/SQLite atau fetch pengumuman karena fitur tersebut tidak ada dalam campus_notify. Target nol akses data mentah/formatting di Presentation diverifikasi pada Praktikum 3.
+
+## Praktikum 2: Domain dan Data per fitur auth
+
+### Entity murni dan Failure
+
+AuthSession hanya memiliki field final access/refresh dan constructor; tidak mengimpor Flutter, package eksternal, atau mapping. Core Failure tetap sealed dengan LocalFailure dan NetworkFailure (status HTTP opsional). Failure tidak membawa objek exception SDK ke Domain.
+
+### Kontrak abstract dengan Dart Records
+
+```dart
+typedef AuthSessionResult = ({AuthSession? session, Failure? failure});
+typedef RefreshResult = ({String? access, Failure? failure});
+typedef AuthStatusResult = ({bool authenticated, Failure? failure});
+typedef LogoutResult = ({Failure? failure});
+
+abstract class AuthRepository {
+  Future<AuthSessionResult> login({
+    required String email,
+    required String password,
+  });
+  Future<RefreshResult> refresh(String refreshToken);
+  Future<AuthStatusResult> getAuthStatus();
+  Future<LogoutResult> logout();
+}
+```
+
+Sukses login/refresh: nilai hasil non-null dan failure null. Gagal: hasil null dan failure non-null. Status sesi false dengan failure null berarti belum login; false dengan failure non-null berarti pembacaan storage gagal.
+
+### Model dan implementasi Data
+
+AuthSessionModel extends AuthSession dan menyediakan fromMap, toMap serta toEntity. Mapping hanya berada di Data; repository mengembalikan AuthSession baru, bukan model. Map memakai key access/refresh dan menolak tipe selain String.
+
+AuthRepositoryImpl menerima MockAuthDataSource dan TokenStore melalui constructor. Try-catch mengubah kegagalan sumber auth/refresh menjadi NetworkFailure dan kegagalan save/read/clear storage menjadi LocalFailure. Simulasi auth Modul 6 tetap menggunakan delay 500/300 ms, aturan email/password lama dan token mock lama. Tidak ditambahkan API Firebase, SQLite atau endpoint baru.
+
+Penyimpanan token saat login, pemeriksaan status dan penghapusan token saat logout berada di repository Data. Interceptor tetap membaca token melalui adapter Data dan menyimpan token hasil refresh; flag isRetry mempertahankan batas retry satu kali. Record refresh gagal ditangani tanpa mengirim exception sumber ke presentation.
+
+### Use case dan penyesuaian pemanggil
+
+Login, Logout dan GetAuthStatus masing-masing memiliki satu operasi melalui call(). Refresh dipanggil langsung melalui kontrak repository oleh interceptor Data; tidak ditambahkan use case yang tidak dibutuhkan. Gambar mengizinkan akses repository langsung untuk operasi sederhana.
+
+Notifier presentation memanggil use case dan menerjemahkan Failure.message menjadi AsyncError untuk UI. SDK exception tidak melewati kontrak Domain. Validator form dan state loading tetap dipertahankan.
+
+Arah dependency:
+```text
+Presentation -> use case -> kontrak repository Domain
+Data -> Domain (implementasi kontrak dan konversi entity)
+provider fitur auth -> Data + Domain (wiring fitur)
+Wiring khusus fitur akan dipusatkan di provider fitur pada Praktikum 3
+```
+
+Domain hanya mengimpor file Dart lokal dan core Failure. Shared providers bukan bagian Domain.
+
+### Verifikasi
+
+```powershell
+flutter analyze --no-pub
+flutter test --no-pub
+rg -n 'package:|fromMap|toMap|jsonDecode|/data/|/presentation/' lib/features/auth/domain lib/core/failures.dart
+```
+
+Tes memeriksa mapping entity/model, login dan penyimpanan token, Record gagal, read/save/clear storage gagal, pemulihan state notifier, status sesi/logout, refresh gagal, refresh sukses dan batas retry satu kali, parsing rute serta smoke test. Mock HTTP tidak mengirim request internet. Hasil akhir Praktikum 2: analyzer bersih dan seluruh 20 test lulus. Pemeriksaan regex Domain/Failure tidak menemukan import package, mapping atau dependency Data/Presentation. Pemindahan wiring dan formatting UI dilanjutkan pada Praktikum 3.
+

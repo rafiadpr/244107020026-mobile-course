@@ -1,8 +1,9 @@
 import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../messaging/push_service.dart';
-import 'auth_provider.dart';
+
+import '../core/providers.dart';
 
 class FcmState {
   final String? token;
@@ -45,16 +46,13 @@ class FcmState {
       lastUpdatedAt: lastUpdatedAt ?? this.lastUpdatedAt,
     );
   }
+
 }
 
-// Provider untuk Service FCM
-final pushServiceProvider = Provider<PushService>((ref) {
-  final dio = ref.watch(apiClientProvider);
-  return PushService(dio: dio);
-});
-
 // NotifierProvider untuk state token FCM
-final fcmStateProvider = NotifierProvider<FcmNotifier, FcmState>(FcmNotifier.new);
+final fcmStateProvider = NotifierProvider<FcmNotifier, FcmState>(
+  FcmNotifier.new,
+);
 
 class FcmNotifier extends Notifier<FcmState> {
   StreamSubscription<String>? _tokenRefreshSub;
@@ -122,10 +120,7 @@ class FcmNotifier extends Notifier<FcmState> {
       } else {
         await pushService.unsubscribeFromTopic('pengumuman-kampus');
       }
-      state = state.copyWith(
-        isLoading: false,
-        isSubscribedToTopic: subscribe,
-      );
+      state = state.copyWith(isLoading: false, isSubscribedToTopic: subscribe);
     } catch (e) {
       state = state.copyWith(
         isLoading: false,

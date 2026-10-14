@@ -1,21 +1,16 @@
-class AuthSession {
-  const AuthSession({required this.access, required this.refresh});
-  final String access;
-  final String refresh;
-}
+import '../models/auth_session_model.dart';
 
-class AuthRepository {
-  // GANTI titik ini dengan FirebaseAuth.instance.signInWithEmailAndPassword
-  // atau GoogleSignIn saat backend Firebase sudah siap.
-  Future<AuthSession> login(
-      {required String email, required String password}) async {
+/// Simulasi auth Modul 6; tidak mengganti mock dengan API/Firebase baru.
+class MockAuthDataSource {
+  Future<AuthSessionModel> login({
+    required String email,
+    required String password,
+  }) async {
     await Future.delayed(const Duration(milliseconds: 500));
     if (!email.contains('@') || password.length < 6) {
       throw Exception('Email atau kata sandi tidak valid');
     }
-    // Simulasi JWT: header.payload.signature (jangan parse manual di produksi,
-    // gunakan verifikasi server).
-    return AuthSession(
+    return AuthSessionModel(
       access: 'mock-access-for-$email',
       refresh: 'mock-refresh-for-$email',
     );
