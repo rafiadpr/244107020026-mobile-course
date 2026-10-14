@@ -1,0 +1,20 @@
+Verifikasi setelah penyederhanaan, 15 Oktober 2026
+
+Presentation tanpa jaringan/storage/JSON langsung
+rg -n 'Dio\(|openDatabase|getDatabasesPath|FlutterSecureStorage|SharedPreferences\.getInstance|jsonDecode' lib/pages lib/features/auth/presentation lib/features/announcements/presentation
+Temuan: 0
+
+Domain dan helper core murni Dart
+rg -n '^import.*package:|/data/|/presentation/|toMap|fromMap|toJson|fromJson' lib/features/auth/domain lib/features/announcements/domain lib/core/failures.dart lib/core/format.dart
+Temuan: 0
+
+Halaman tanpa instansiasi repository/formatting mentah
+rg -n 'RepositoryImpl\(|Repository\(|DateFormat|DateTime\.now\(|\.toLocal\(|\.toIso8601String' lib/pages lib/features/auth/presentation/pages lib/features/announcements/presentation/pages
+Temuan: 0
+
+Test use case memakai kontrak Domain
+rg -n 'package:(dio|firebase|sqflite|flutter_secure_storage)|/data/' test/register_device_test.dart
+Temuan: 0
+
+flutter analyze --no-pub: No issues found
+flutter test --no-pub: 32 tests passed

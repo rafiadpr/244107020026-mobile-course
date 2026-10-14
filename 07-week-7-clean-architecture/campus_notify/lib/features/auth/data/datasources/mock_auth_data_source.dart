@@ -1,5 +1,9 @@
 import '../models/auth_session_model.dart';
 
+class InvalidCredentialsException implements Exception {}
+
+class MissingRefreshTokenException implements Exception {}
+
 /// Simulasi auth Modul 6; tidak mengganti mock dengan API/Firebase baru.
 class MockAuthDataSource {
   Future<AuthSessionModel> login({
@@ -8,7 +12,7 @@ class MockAuthDataSource {
   }) async {
     await Future.delayed(const Duration(milliseconds: 500));
     if (!email.contains('@') || password.length < 6) {
-      throw Exception('Email atau kata sandi tidak valid');
+      throw InvalidCredentialsException();
     }
     return AuthSessionModel(
       access: 'mock-access-for-$email',
@@ -18,7 +22,7 @@ class MockAuthDataSource {
 
   Future<String> refresh(String refreshToken) async {
     await Future.delayed(const Duration(milliseconds: 300));
-    if (refreshToken.isEmpty) throw Exception('Refresh token hilang');
+    if (refreshToken.isEmpty) throw MissingRefreshTokenException();
     return 'mock-access-renewed-${DateTime.now().millisecondsSinceEpoch}';
   }
 }

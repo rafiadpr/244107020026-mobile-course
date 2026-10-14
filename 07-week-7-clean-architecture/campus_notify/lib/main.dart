@@ -2,7 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'messaging/providers.dart';
+import 'features/announcements/presentation/providers/fcm_provider.dart';
 import 'routes.dart';
 
 void main() async {
@@ -29,7 +29,7 @@ class _MyAppState extends ConsumerState<MyApp> {
     super.initState();
     // Inisialisasi listener navigasi FCM setelah frame UI pertama siap
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final pushService = ref.read(pushServiceProvider);
+      final repository = ref.read(announcementRepositoryProvider);
       final router = ref.read(routerProvider);
 
       void navigate(String route) {
@@ -38,10 +38,13 @@ class _MyAppState extends ConsumerState<MyApp> {
       }
 
       // Handler Foreground & Background
-      pushService.listenForegroundAndBackground(navigate);
+      final listening = repository.listenNotifications(navigate);
+      if (listening.failure != null) debugPrint(listening.failure!.message);
 
       // Handler Terminated (cold-start)
-      pushService.handleTerminated(navigate);
+      repository.handleInitialNotification(navigate).then((result) {
+        if (result.failure != null) debugPrint(result.failure!.message);
+      });
     });
   }
 

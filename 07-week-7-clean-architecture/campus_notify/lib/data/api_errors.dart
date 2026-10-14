@@ -40,7 +40,8 @@ class ApiErrors {
       case DioExceptionType.unknown:
       default:
         final msg = error.message ?? '';
-        if (msg.contains('SocketException') || msg.contains('Network is unreachable')) {
+        if (msg.contains('SocketException') ||
+            msg.contains('Network is unreachable')) {
           return 'Tidak ada koneksi internet (Offline).';
         }
         return 'Terjadi kesalahan jaringan yang tidak terduga. Silakan coba lagi.';
@@ -52,6 +53,6 @@ class ApiErrors {
     if (error is DioException) {
       return mapDioError(error);
     }
-    return error.toString().replaceFirst(RegExp(r'^Exception: '), '');
+    return 'Terjadi kesalahan. Silakan coba lagi.';
   }
 }

@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../../../../core/failures.dart';
+import '../../../../data/api_errors.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/mock_auth_data_source.dart';
 import '../datasources/token_store.dart';
@@ -24,8 +25,11 @@ class AuthRepositoryImpl implements AuthRepository {
         refresh: model.session!.refresh,
       );
       return model;
-    } on Exception catch (error) {
-      return (session: null, failure: LocalFailure(_message(error)));
+    } on Exception {
+      return (
+        session: null,
+        failure: const LocalFailure('Gagal menyimpan sesi. Silakan coba lagi.'),
+      );
     }
   }
 
@@ -53,8 +57,11 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final access = await store.readAccess();
       return (authenticated: access != null, failure: null);
-    } on Exception catch (error) {
-      return (authenticated: false, failure: LocalFailure(_message(error)));
+    } on Exception {
+      return (
+        authenticated: false,
+        failure: const LocalFailure('Gagal membaca sesi. Silakan coba lagi.'),
+      );
     }
   }
 
@@ -63,16 +70,18 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await store.clear();
       return (failure: null);
-    } on Exception catch (error) {
-      return (failure: LocalFailure(_message(error)));
+    } on Exception {
+      return (
+        failure: const LocalFailure('Gagal menghapus sesi. Silakan coba lagi.'),
+      );
     }
   }
 
-  NetworkFailure _remoteFailure(Exception error) => NetworkFailure(
-    _message(error),
-    statusCode: error is DioException ? error.response?.statusCode : null,
-  );
-
-  String _message(Exception error) =>
-      error.toString().replaceFirst(RegExp(r'^Exception: '), '');
+  NetworkFailure _remoteFailure(Exception error) =>
+      NetworkFailure(switch (error) {
+        InvalidCredentialsException() => 'Email atau kata sandi tidak valid',
+        MissingRefreshTokenException() => 'Refresh token hilang',
+        DioException() => ApiErrors.mapDioError(error),
+        _ => 'Gagal memproses autentikasi. Silakan coba lagi.',
+      }, statusCode: error is DioException ? error.response?.statusCode : null);
 }

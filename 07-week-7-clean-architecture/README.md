@@ -143,14 +143,18 @@ Bukti dan hasil lengkap:
 
 ## AI Challenge: menilai biaya arsitektur
 
-Paket tanggung jawab teknis disimpan di :
-
 - [Prompt dan konteks nyata](campus_notify/docs/ai_challenge/01_prompt.md).
 - [Usulan awal AI](campus_notify/docs/ai_challenge/02_usulan_awal.md).
 - [Tabel usulan vs keputusan, struktur final dan wiring Riverpod](campus_notify/docs/ai_challenge/03_keputusan.md).
 - [Pemetaan setiap file lama: pindah/pecah/hapus](campus_notify/docs/ai_challenge/04_pemetaan_file.md).
-- [Checklist verifikasi](campus_notify/docs/ai_challenge/05_verifikasi.md) dan [output grep aktual](campus_notify/docs/ai_challenge/verification.txt).
+- [Checklist verifikasi](campus_notify/docs/ai_challenge/05_verifikasi.md).
 
 Keputusan implementasi: Login, Logout dan GetAuthStatus hanya meneruskan satu call repository, sehingga tiga class use case serta provider perantaranya dihapus. AuthNotifier sekarang menggunakan kontrak Domain melalui authRepositoryProvider langsung. Record/Failure, mock, storage, loading/error dan UI dipertahankan. Use case akan bernilai jika ada aturan aplikasi atau orkestrasi beberapa repository yang nyata, bukan sekadar membungkus setiap method.
 
 Hasil verifikasi perubahan: analyzer bersih dan **24 test lulus**. Grep membuktikan Domain/Failure bebas package dan layer luar, entity bebas mapping, Presentation bebas data mentah, widget bebas constructor repository dan formatting tanggal mentah. Kontrol positif memastikan kontrak, implementasi, model dan wiring benar-benar ada pada path yang diuji.
+
+## Refactoring dan testing
+
+Pola Domain/Data diterapkan pada notifikasi pengumuman yang sudah ada. Use case RegisterDevice mengatur pengambilan dan sinkronisasi token, termasuk force refresh. Formatting tanggal dan parsing route dipindahkan ke core/format.dart.
+
+Analyzer bersih dan **32 tes lulus**. [Catatan singkat dan screenshot](campus_notify/docs/refactoring/README.md).

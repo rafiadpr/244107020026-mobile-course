@@ -11,8 +11,8 @@ import 'package:campus_notify/features/auth/domain/repositories/auth_repository.
 import 'package:campus_notify/features/auth/presentation/pages/login_page.dart';
 import 'package:campus_notify/features/auth/presentation/providers/auth_provider.dart';
 import 'package:campus_notify/features/announcements/presentation/pages/announcement_page.dart';
-import 'package:campus_notify/pages/debug_token_page.dart';
-import 'package:campus_notify/providers/fcm_provider.dart';
+import 'package:campus_notify/features/announcements/presentation/pages/debug_token_page.dart';
+import 'package:campus_notify/features/announcements/presentation/providers/fcm_provider.dart';
 
 class FakeAuthRepository implements AuthRepository {
   bool authenticated = false;
