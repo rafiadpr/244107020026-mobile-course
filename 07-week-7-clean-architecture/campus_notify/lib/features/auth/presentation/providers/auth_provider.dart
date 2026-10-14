@@ -4,11 +4,8 @@ import '../../../../core/providers.dart';
 import '../../data/datasources/mock_auth_data_source.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/repositories/auth_repository.dart';
-import '../../domain/usecases/get_auth_status.dart';
-import '../../domain/usecases/login.dart';
-import '../../domain/usecases/logout.dart';
 
-// Satu tempat wiring auth. State/UI mengonsumsi abstraksi dan use case ini.
+// Satu tempat wiring auth. Notifier memakai kontrak Domain untuk operasi sederhana.
 final authDataSourceProvider = Provider<MockAuthDataSource>(
   (ref) => MockAuthDataSource(),
 );
@@ -17,15 +14,6 @@ final authRepositoryProvider = Provider<AuthRepository>(
     source: ref.watch(authDataSourceProvider),
     store: ref.watch(tokenStoreProvider),
   ),
-);
-final loginProvider = Provider<Login>(
-  (ref) => Login(ref.watch(authRepositoryProvider)),
-);
-final logoutProvider = Provider<Logout>(
-  (ref) => Logout(ref.watch(authRepositoryProvider)),
-);
-final getAuthStatusProvider = Provider<GetAuthStatus>(
-  (ref) => GetAuthStatus(ref.watch(authRepositoryProvider)),
 );
 
 extension AuthStateMessage on AsyncValue<bool> {
@@ -39,7 +27,7 @@ final authStateProvider = AsyncNotifierProvider<AuthNotifier, bool>(
 class AuthNotifier extends AsyncNotifier<bool> {
   @override
   Future<bool> build() async {
-    final result = await ref.watch(getAuthStatusProvider)();
+    final result = await ref.watch(authRepositoryProvider).getAuthStatus();
     if (result.failure != null) {
       // Riverpod mengubah pesan presentation ini menjadi AsyncError.
       throw result.failure!.message;
@@ -49,10 +37,9 @@ class AuthNotifier extends AsyncNotifier<bool> {
 
   Future<void> login(String email, String password) async {
     state = const AsyncLoading();
-    final result = await ref.read(loginProvider)(
-      email: email,
-      password: password,
-    );
+    final result = await ref
+        .read(authRepositoryProvider)
+        .login(email: email, password: password);
     if (result.failure != null) {
       state = AsyncError(result.failure!.message, StackTrace.current);
     } else {
@@ -61,7 +48,7 @@ class AuthNotifier extends AsyncNotifier<bool> {
   }
 
   Future<void> logout() async {
-    final result = await ref.read(logoutProvider)();
+    final result = await ref.read(authRepositoryProvider).logout();
     if (result.failure != null) {
       state = AsyncError(result.failure!.message, StackTrace.current);
     } else {

@@ -11,8 +11,6 @@ import 'package:campus_notify/features/auth/data/datasources/mock_auth_data_sour
 import 'package:campus_notify/features/auth/data/models/auth_session_model.dart';
 import 'package:campus_notify/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:campus_notify/features/auth/domain/entities/auth_session.dart';
-import 'package:campus_notify/features/auth/domain/usecases/login.dart';
-import 'package:campus_notify/features/auth/domain/usecases/logout.dart';
 import 'package:campus_notify/features/auth/presentation/providers/auth_provider.dart';
 
 import 'auth_push_test.dart' show FakeTokenStore;
@@ -107,13 +105,13 @@ void main() {
     );
   });
 
-  test('Login use case memakai mock lama dan menyimpan kedua token', () async {
+  test('Repository memakai mock lama dan menyimpan kedua token', () async {
     final store = FakeTokenStore();
     final repository = AuthRepositoryImpl(
       source: MockAuthDataSource(),
       store: store,
     );
-    final result = await Login(repository)(
+    final result = await repository.login(
       email: 'student@campus.ac.id',
       password: 'secret123',
     );
@@ -122,7 +120,7 @@ void main() {
     expect(store.access, 'mock-access-for-student@campus.ac.id');
     expect(store.refresh, 'mock-refresh-for-student@campus.ac.id');
     expect((await repository.getAuthStatus()).authenticated, isTrue);
-    expect((await Logout(repository)()).failure, isNull);
+    expect((await repository.logout()).failure, isNull);
     expect(store.access, isNull);
   });
 
