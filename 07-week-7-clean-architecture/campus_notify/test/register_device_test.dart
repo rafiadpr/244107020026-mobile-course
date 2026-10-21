@@ -143,4 +143,29 @@ void main() {
     expect(result.registration, isNull);
     expect(repo.calls, ['get', 'sync']);
   });
+
+  test('Force refresh berhenti jika get gagal setelah delete', () async {
+    const failure = LocalFailure('Gagal membaca token setelah delete');
+    final repo = FakeAnnouncementRepository(getFailure: failure);
+    final result = await RegisterDevice(repo)(
+      token: 'old-token',
+      forceRefresh: true,
+    );
+    expect(result.failure, same(failure));
+    expect(result.registration, isNull);
+    expect(repo.calls, ['delete', 'get']);
+  });
+
+  for (final token in ['', '   ']) {
+    test('Force refresh menolak token baru "$token"', () async {
+      final repo = FakeAnnouncementRepository(token: token);
+      final result = await RegisterDevice(repo)(
+        token: 'old-token',
+        forceRefresh: true,
+      );
+      expect(result.failure, isA<LocalFailure>());
+      expect(result.registration, isNull);
+      expect(repo.calls, ['delete', 'get']);
+    });
+  }
 }

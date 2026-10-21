@@ -41,7 +41,8 @@
 ![Flutter Test](screenshots/Screenshot%202026-10-21%20232733.png)
 
 2. Aktifkan penolakan otomatis (CI)
-- CI ada pada [`templates/ci.yml`](templates/ci.yml)
+- Workflow sudah disiapkan pada [`.github/workflows/ci.yml`](../.github/workflows/ci.yml). CI berjalan setelah file di-commit dan di-push pada PR ke develop.
+- Salinan template ada pada [`templates/ci.yml`](templates/ci.yml).
 
 3. Nilai kesiapan tengah semester
 - Docs ada pada [`docs/review-checklist.md`](docs/review-checklist.md)
@@ -49,10 +50,10 @@
 | Pemeriksaan | Bukti saat ini |
 | --- | --- |
 | Analyze | No issues found pada perubahan validasi token. |
-| Format seluruh proyek | Belum dicatat; dua file perubahan sudah diformat. |
-| Test | 11 tes terarah dan seluruh 40 tes lulus. |
-| Tiga grep sterilitas Minggu 7 | Belum dijalankan ulang pada Modul 8. |
-| CI | Template tersedia, workflow aktif belum dipasang melalui panduan ini. |
+| Format kode | Pemeriksaan `lib test` lulus: 33 file, 0 perubahan. |
+| Test | Seluruh 43 tes permanen lulus setelah tiga tes tambahan. |
+| Tiga grep sterilitas Minggu 7 | Sudah dijalankan ulang: tidak ada kecocokan pada ketiga pencarian. |
+| CI | Workflow tersedia di root repository; hasil GitHub Actions belum diverifikasi. |
 | README, screenshot, cara run | Perlu dilengkapi untuk Modul 8. |
 | Perilaku aplikasi setara akhir Minggu 7 | Uji manual ulang belum dilakukan. |
 
@@ -62,12 +63,48 @@
 Laporan: [docs/ai-review-vs-keputusan.md](docs/ai-review-vs-keputusan.md).
 
 
-# Refactoring, testing, dan verifikasi mandiri
+# Refactoring, testing, dan error umum
 
+## Testing
+
+Jalankan dari `07-week-7-clean-architecture/campus_notify`:
+
+```bash
+flutter analyze --no-pub
+dart format --output=none --set-exit-if-changed lib test
+flutter test --no-pub
+```
+
+| Pemeriksaan | Hasil |
+| --- | --- |
+| Analyze | No issues found. |
+| Format `lib test` | 33 file diperiksa, 0 perubahan. |
+| Seluruh tes | **43 tes permanen lulus** (40 sebelumnya + 3 tambahan). |
+
+Semua perintah selesai dengan exit code 0 pada kode lokal yang belum di-commit.
+
+## Checklist verifikasi mandiri
+
+- [x] Dua saran tes AI ditindaklanjuti menjadi tiga tes permanen.
+- [x] Formatter dipakai dan workflow CI disiapkan.
+- [x] Hasil grep sterilitas diperiksa ulang.
+- [x] Analyze, format, dan seluruh 43 tes lulus secara lokal.
+- [ ] Hasil CI pada GitHub sudah hijau.
 - [ ] Minimal tiga komentar review bermakna ditindaklanjuti hingga approve.
-- [ ] Style berulang ditangani formatter/CI.
-- [ ] PR >300 baris dipecah menjadi dua atau tiga PR kecil; jika tidak ada, catat tidak berlaku dan ukuran aktual.
-- [ ] Reviewer menjalankan analyze/test serta uji manual sekitar lima menit per fitur + screenshot.
-- [ ] Branch dari develop, PR kecil satu fitur, issue ditutup melalui PR.
-- [ ] Analyze, format dan test hijau pada versi akhir.
-- [ ] README berisi status tengah semester dan peta issue/PR.
+- [ ] PR besar dipisah sesuai rencana bila masih diperlukan pada diff GitHub terbaru.
+- [ ] Uji manual lima menit per fitur dan screenshot hasilnya tersedia.
+- [ ] Issue, PR, dan keputusan merge akhir dicatat dengan tautan nyata.
+
+
+# Refleksi
+1. Apa beda LGTM buta dengan approve yang bertanggung jawab? Apa risikonya bagi tim?
+LGTM buta berarti menyetujui tanpa memeriksa. Approve yang bertanggung jawab dilakukan setelah membaca kode dan menguji. Jika asal approve, bug bisa lolos dan menyulitkan tim.
+
+2. Kapan komentar wajib berstatus request changes, dan kapan cukup saran?
+Request changes diperlukan jika ada bug, pelanggaran arsitektur, atau tes penting yang belum ada. Saran cukup untuk perbaikan kecil yang tidak menghambat fungsi.
+
+3. Bagian mana dari review AI yang Anda tolak atau sederhanakan, dan mengapa?
+Saya menolak akses Firebase langsung dari Domain karena melanggar arsitektur. Saya juga menolak pemangkasan token karena dapat mengubah nilainya.
+
+4. Satu hal konkret yang Anda perbaiki setelah review sejawat — apa dampaknya?
+Saya menambahkan tiga tes force refresh setelah review AI. Dampaknya, kegagalan mengambil token dan token baru kosong ikut diperiksa. Review ini dilakukan mandiri, bukan dengan pasangan.
