@@ -24,7 +24,7 @@ class RegisterDevice {
       }
       token = result.token;
     }
-    if (token == null || token.trim().isEmpty) {
+    if (token == null) {
       return (
         registration: null,
         failure: const LocalFailure(
