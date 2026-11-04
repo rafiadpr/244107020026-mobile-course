@@ -149,3 +149,22 @@ Gambar berikut diambil dari widget Flutter dengan service tiruan. Respons stream
 | --- | --- | --- |
 | ![Chat streaming](screenshots/chat_streaming.jpg) | ![Chat error](screenshots/chat_error.jpg) | ![FAQ offline](screenshots/chat_offline.jpg) |
 
+# Tugas, refleksi, dan referensi
+
+## Refleksi
+
+1. Fitur AI mana yang Anda integrasikan dan mengapa?
+
+Saya mengintegrasikan chat asisten kampus karena pengguna bisa bertanya langsung tentang penggunaan aplikasi dan informasi kampus. Saya juga mencoba OCR, mengubah suara menjadi teks, dan deskripsi gambar agar lebih memahami cara mengirim beberapa jenis input ke AI.
+
+2. Bagaimana Anda melindungi privasi pengguna saat menggunakan AI API?
+
+Saya menyimpan API key di secure storage dan tidak menulisnya di kode. Saya juga memberi peringatan agar pengguna tidak mengirim data pribadi. Pertanyaan dengan pola nomor panjang atau email ditolak, sedangkan gambar dan suara memerlukan persetujuan sebelum dikirim. Data login dan token notifikasi tidak ikut dikirim ke AI.
+
+3. Fallback apa yang Anda sediakan jika layanan AI error?
+
+Saya menyediakan pesan kesalahan, tombol coba lagi, dan FAQ offline. FAQ berisi jawaban sederhana dari data lokal, sehingga masih bisa dipakai tanpa layanan AI. Jika jawabannya belum tersedia, pengguna diarahkan ke bagian akademik.
+
+4. Satu hal yang Anda pelajari tentang UX fitur AI di mobile?
+
+Saya belajar bahwa pengguna perlu tahu apakah aplikasi sedang memproses atau mengalami masalah. Indikator loading dan jawaban yang muncul bertahap membantu pengguna memahami prosesnya. Pesan error yang jelas dan pilihan offline juga membuat aplikasi tetap berguna ketika koneksi bermasalah.
