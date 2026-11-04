@@ -65,4 +65,87 @@ flutter run --dart-define=GEMINI_MODEL=gemini-3.5-flash-lite
 
 Pada Android, minimum SDK ditetapkan setidaknya 24 sesuai kebutuhan `image_picker`. Plugin Google Services hanya diaktifkan jika `android/app/google-services.json` tersedia. Chat dan FAQ dapat dipakai tanpa konfigurasi FCM; notifikasi Firebase memerlukan konfigurasi Firebase yang sesuai. Berkas konfigurasi tersebut tidak disertakan dalam salinan tugas.
 
+# OCR, Speech-to-Text, dan Image Understanding
+
+1. OCR
+
+Pilih ikon media pada chat, lalu ambil gambar dari kamera atau galeri. Pratinjau gambar ditampilkan sebelum pengiriman. Tombol `Baca teks (OCR)` mengirim gambar ke Gemini dengan instruksi menyalin teks yang terbaca tanpa menebak bagian yang tidak jelas.
+
+2. Speech-to-Text
+
+Tekan `Rekam suara` dan ucapkan kalimat singkat. Rekaman berhenti ketika tombol hentikan ditekan atau setelah 15 detik. Tombol `Transkripsikan` mengirim rekaman WAV untuk diubah menjadi teks. Rekaman sementara dihapus ketika halaman ditutup atau diganti dengan rekaman baru.
+
+3. Image Understanding
+
+Setelah gambar dipilih, tekan `Deskripsikan gambar`. Hasilnya berupa penjelasan singkat isi gambar tanpa menebak identitas orang.
+
+Implementasi ketiga latihan berada pada [lib/features/media_screen.dart](campus_notify/lib/features/media_screen.dart). File dibatasi maksimal 5 MB. Dialog persetujuan ditampilkan sebelum setiap pengiriman file ke Google Gemini. Android memiliki izin mikrofon, sedangkan iOS memiliki keterangan penggunaan kamera, galeri, dan mikrofon.
+
+# Privasi, biaya, error handling, dan fallback
+
+1. Tabel risiko dan mitigasi
+
+| Risiko | Mitigasi yang diterapkan |
+| --- | --- |
+| Data pengguna terkirim | Peringatan pada chat, pemeriksaan pola nomor panjang dan email, serta persetujuan sebelum unggah file |
+| API key bocor | Secure storage, input kunci disamarkan, tanpa kunci di source code atau log |
+| Biaya bertambah | Maksimal 20 request per sesi service, input 1000 karakter, output 1024 token, file 5 MB, dan rekaman 15 detik |
+| Pertanyaan berulang | Cache maksimal 10 jawaban chat di memori selama sesi service |
+| API error atau kuota penuh | Pesan ramah untuk kegagalan koneksi, timeout, penolakan akses, HTTP 429, dan error server |
+| Jawaban kosong atau tidak lengkap | Respons kosong, diblokir, dan terpotong ditandai sebagai kegagalan dan tidak disimpan dalam cache |
+| Informasi tidak akurat | Prompt melarang mengarang informasi resmi; UI mengingatkan bahwa jawaban AI dapat keliru |
+| Tidak ada koneksi | FAQ offline untuk pengumuman, notifikasi, jadwal, dan beasiswa |
+
+Pemeriksaan teks hanya mengenali pola tertentu. Alamat atau data pribadi dalam gambar dan suara tidak otomatis disamarkan. Karena itu, unggahan memakai pemberitahuan privasi dan persetujuan. Riwayat chat serta cache tidak disimpan ke disk. Cache dan hitungan request direset ketika service ditutup, sehingga batas ini merupakan pengendalian sederhana untuk praktikum, bukan kuota harian akun.
+
+2. Fallback
+
+```text
+Permintaan AI gagal
+        |
+Pesan kesalahan + Coba lagi + Gunakan FAQ offline
+        |
+FAQ lokal berdasarkan kata kunci
+        |
+Jika tidak ditemukan, arahkan ke bagian akademik
+```
+
+FAQ memakai data lokal di [lib/ai/offline_faq.dart](campus_notify/lib/ai/offline_faq.dart). Jawaban diberi label `FAQ offline` agar sumbernya jelas. OCR dan transkripsi tetap membutuhkan internet; ketika gagal, input teks pada chat tetap dapat digunakan.
+
+# Pengujian
+
+1. Perintah pemeriksaan
+
+```bash
+flutter analyze
+dart format --output=none --set-exit-if-changed lib test
+flutter test
+```
+
+2. Cakupan pengujian
+
+| Pemeriksaan | Hasil |
+| --- | --- |
+| `flutter analyze` | No issues found |
+| Pemeriksaan format `lib` dan `test` | 40 file diperiksa, 0 berubah |
+| `flutter test` | 65 test lulus |
+
+| Pengujian | Cakupan |
+| --- | --- |
+| Service AI | Simpan/hapus kunci, header API key, prompt sistem, streaming, cache, batas request, validasi input, respons kosong, respons terpotong, dan blokir keamanan |
+| Error HTTP | Status 400, 403, 404, 429, dan 500 |
+| Media | Prompt OCR/deskripsi/transkripsi, MIME type, encoding file, dan batas ukuran |
+| Widget chat | Respons bertahap, indikator loading, tombol kirim, pesan gagal, serta perpindahan ke FAQ offline |
+| Privasi | Input berpola data sensitif ditolak sebelum memanggil service |
+| Fitur sebelumnya | Seluruh test bawaan Campus Notify ikut dijalankan |
+
+Hasil pemeriksaan tersimpan pada [Flutter Analyze](screenshots/flutter_analyze.png), [Dart Format](screenshots/dart_format.png), dan [Flutter Test](screenshots/flutter_test.png). Rincian pelaksanaan tersedia di [docs/verifikasi.md](docs/verifikasi.md).
+
+3. Tampilan dari widget test
+
+Gambar berikut diambil dari widget Flutter dengan service tiruan. Respons streaming dan kegagalan API disimulasikan untuk memeriksa tampilan.
+
+| Respons streaming | Layanan gagal | Fallback offline |
+| --- | --- | --- |
+| ![Chat streaming](screenshots/chat_streaming.jpg) | ![Chat error](screenshots/chat_error.jpg) | ![FAQ offline](screenshots/chat_offline.jpg) |
 
