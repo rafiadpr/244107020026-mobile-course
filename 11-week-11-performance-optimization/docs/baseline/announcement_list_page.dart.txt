@@ -1,0 +1,65 @@
+import 'package:flutter/material.dart';
+
+class AnnouncementListPage extends StatefulWidget {
+  const AnnouncementListPage({super.key});
+
+  @override
+  State<AnnouncementListPage> createState() => _AnnouncementListPageState();
+}
+
+class _AnnouncementListPageState extends State<AnnouncementListPage> {
+  final _titles = ['Jadwal kuliah', 'Pendaftaran beasiswa', 'Seminar kampus'];
+  var _refreshCount = 0;
+
+  Future<void> _refresh() async {
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    if (mounted) setState(() => _refreshCount++);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Daftar Pengumuman')),
+      body: Column(
+        children: [
+          Padding(
+            padding: EdgeInsets.all(16),
+            child: Text('Informasi kegiatan dan akademik kampus'),
+          ),
+          Text('Pembaruan: $_refreshCount'),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: _refresh,
+              child: ListView(
+                key: const Key('announcement-list'),
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: List.generate(120, (index) {
+                  final title = '${_titles[index % _titles.length]} ${index + 1}';
+                  return Card(
+                    child: ListTile(
+                      leading: CircleAvatar(child: Icon(Icons.campaign)),
+                      title: Text(title),
+                      subtitle: Text('Informasi pengumuman kampus'),
+                      trailing: Icon(Icons.chevron_right),
+                      onTap: () => Navigator.of(context).push<void>(
+                        MaterialPageRoute(
+                          builder: (context) => Scaffold(
+                            appBar: AppBar(title: Text(title)),
+                            body: Padding(
+                              padding: EdgeInsets.all(20),
+                              child: Text('Contoh informasi untuk $title.'),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
