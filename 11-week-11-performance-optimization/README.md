@@ -77,3 +77,23 @@ flutter test --no-pub
 | Integration test mode profile | Skenario baseline dan sesudah optimasi lulus |
 
 Widget test memeriksa pemuatan item bertahap, navigasi detail, pull-to-refresh, dan akses ke item terakhir. Rincian pemeriksaan tersedia pada [docs/verifikasi.md](docs/verifikasi.md).
+
+# Tugas, refleksi, dan referensi
+
+## Refleksi
+
+1. Optimasi mana yang memberikan dampak terbesar dan mengapa?
+
+Menurut saya, penggunaan `ListView.builder` paling membantu karena daftar berisi 120 pengumuman. Sebelumnya, seluruh widget item dibuat sekaligus. Setelah diubah, widget item dibuat sesuai kebutuhan tampilan sehingga pekerjaan saat membuka daftar berkurang.
+
+2. Bagaimana Anda memverifikasi bahwa optimasi benar-benar bekerja (bukan placebo)?
+
+Saya membandingkan hasil profiling sebelum dan sesudah dengan data serta skenario yang sama. Rata-rata durasi frame turun dari 3,267 ms menjadi 3,092 ms. Jumlah frame merah masih satu, jadi belum semua masalah performa teratasi. Saya juga menjalankan pengujian untuk memastikan daftar, detail, dan refresh tetap berfungsi.
+
+3. Trade-off apa yang Anda hadapi (misalnya kompleksitas kode vs performa)?
+
+Kode menjadi sedikit lebih panjang karena item dan detail dipisahkan menjadi widget sendiri. Penggunaan `ValueNotifier` juga memerlukan `dispose()`. Menurut saya, tambahan ini masih mudah dipahami dan membantu membatasi bagian tampilan yang diperbarui.
+
+4. Kapan sebaiknya optimasi premature dihindari?
+
+Optimasi terlalu awal sebaiknya dihindari saat belum ada masalah performa atau hasil pengukuran. Saya lebih memilih menyelesaikan fungsi utama terlebih dahulu. Setelah itu, profiling digunakan untuk menentukan bagian yang perlu diperbaiki agar perubahan kode memiliki alasan yang jelas.
