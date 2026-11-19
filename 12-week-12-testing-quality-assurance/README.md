@@ -122,6 +122,47 @@ Setelah satu tugas berhasil disimpan, tombol simpan ditekan lagi saat input koso
 
 Pengujian integrasi memeriksa alur dari input pengguna sampai tugas tampil di daftar. Pengujian regresi menjaga agar aturan validasi tetap berlaku setelah tugas pertama disimpan dan kolom input dibersihkan.
 
+# Praktikum 5 : Menyusun test suite untuk fitur tugas
+
+1. Mencatat perilaku fitur
+
+| Skenario | Jenis pengujian | Hasil yang diharapkan |
+| --- | --- | --- |
+| Judul berisi teks | Unit dan widget | Judul diterima dan tugas dapat disimpan |
+| Judul kosong atau hanya spasi | Unit dan widget | Judul ditolak dan tidak ada tugas baru |
+| Judul satu karakter | Unit | Judul tetap diterima karena sudah berisi teks |
+| Daftar tugas kosong | Unit dan widget | Hasil berupa daftar kosong dan pesan kosong tampil |
+| Repository gagal memuat atau menyimpan | Unit dan widget | Error diteruskan, pesan gagal tampil, dan penyimpanan yang gagal tidak menambah tugas |
+| Tugas berhasil disimpan | Widget | Tugas tampil dan kolom input dibersihkan |
+| Tombol simpan ditekan saat proses berjalan | Widget | Tombol dinonaktifkan dan tugas hanya disimpan satu kali |
+| Dua tugas ditambahkan melalui aplikasi | Integrasi | Kedua tugas tampil di daftar |
+
+2. Mengelompokkan pengujian logika
+
+Validasi judul di [test/is_valid_task_title_test.dart](testing_lab/test/is_valid_task_title_test.dart)
+
+Service di [test/task_service_test.dart](testing_lab/test/task_service_test.dart)
+
+Repository memori di [test/memory_task_repository_test.dart](testing_lab/test/memory_task_repository_test.dart)
+
+3. Menguji dependensi dengan fake
+
+Fake di [test/fakes/fake_task_repository.dart](testing_lab/test/fakes/fake_task_repository.dart)
+
+Setiap pengujian membuat repository sendiri agar data tidak terbawa ke pengujian lain
+
+4. Menguji tampilan dan interaksi
+
+Pengujian UI di [test/task_page_test.dart](testing_lab/test/task_page_test.dart)
+
+Skenarionya mencakup tampilan awal, data kosong, input tidak valid, penyimpanan berhasil, loading, dan pesan gagal
+
+5. Menguji alur utama
+
+Pengujian integrasi di [integration_test/app_test.dart](testing_lab/integration_test/app_test.dart)
+
+Alur utama menjalankan aplikasi, menolak input spasi, lalu menyimpan dua tugas
+
 # Pengujian
 
 1. Flutter test

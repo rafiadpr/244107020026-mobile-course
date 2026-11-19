@@ -32,4 +32,26 @@ void main() {
       await expectLater(result, throwsA(same(error)));
     });
   });
+
+  group('TaskService.addTask', () {
+    test('meneruskan judul tugas ke repository', () async {
+      final repository = FakeTaskRepository();
+      final service = TaskService(repository);
+
+      await service.addTask('Baca materi');
+
+      expect(repository.addedTasks, ['Baca materi']);
+    });
+
+    test('meneruskan error penyimpanan tanpa mencatat tugas baru', () async {
+      final error = Exception('Gagal menyimpan tugas');
+      final repository = FakeTaskRepository(saveError: error);
+      final service = TaskService(repository);
+
+      final result = service.addTask('Baca materi');
+
+      await expectLater(result, throwsA(same(error)));
+      expect(repository.addedTasks, isEmpty);
+    });
+  });
 }
