@@ -67,6 +67,38 @@ Pengujian berhasil dan kosong memakai `await` untuk menunggu data. Pengujian keg
 
 Daftar kosong dan kegagalan mengambil data perlu dibedakan. Daftar kosong berarti data berhasil diambil tetapi belum ada tugas. Jika repository gagal, service meneruskan error agar pemanggil dapat menangani kegagalan tersebut.
 
+# Praktikum 3 : Pengujian widget
+
+1. Membuat halaman daftar tugas
+
+Halaman di [lib/task_page.dart](testing_lab/lib/task_page.dart)
+
+Aplikasi menampilkan kolom `Judul tugas`, tombol `Simpan tugas`, dan daftar tugas. Jika belum ada data, halaman menampilkan pesan kosong beserta cara menambah tugas.
+
+2. Menghubungkan halaman dengan repository
+
+Penyimpanan di [lib/memory_task_repository.dart](testing_lab/lib/memory_task_repository.dart)
+
+3. Menguji tampilan dan interaksi
+
+Pengujian di [test/task_page_test.dart](testing_lab/test/task_page_test.dart)
+
+4. Skenario pengujian
+
+| Skenario | Hasil yang diharapkan |
+| --- | --- |
+| Halaman dibuka tanpa tugas | Judul halaman, form, tombol simpan, dan pesan kosong tampil |
+| Repository memiliki data | Tugas yang sudah ada tampil di daftar |
+| Judul kosong atau hanya spasi | Pesan validasi tampil dan repository tidak menyimpan tugas |
+| Judul valid disimpan | Tugas muncul tanpa spasi awal dan akhir, data lama tetap ada, dan kolom input kosong kembali |
+| Data sedang dimuat atau disimpan | Indikator loading tampil saat memuat; tombol dan input dinonaktifkan saat menyimpan agar tugas tidak terkirim dua kali |
+| Gagal memuat data | Pesan gagal dan tombol `Coba lagi` tampil; data bisa dimuat setelah kondisi diperbaiki |
+| Gagal menyimpan tugas | Input tetap berisi judul, tugas belum masuk daftar, dan penyimpanan bisa dicoba lagi |
+
+5. Temuan
+
+Pesan daftar kosong perlu dibedakan dari pesan gagal memuat data. Saat penyimpanan gagal, judul tetap berada di kolom input agar tidak perlu diketik ulang. Tombol simpan dinonaktifkan selama penyimpanan untuk mencegah tugas yang sama terkirim dua kali.
+
 # Pengujian
 
 1. Flutter test

@@ -8,4 +8,8 @@ class TaskService {
   Future<List<String>> loadTasks() {
     return _repository.getTasks();
   }
+
+  Future<void> addTask(String title) {
+    return _repository.addTask(title);
+  }
 }

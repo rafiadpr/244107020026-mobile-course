@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
 
+import 'memory_task_repository.dart';
+import 'task_page.dart';
+import 'task_service.dart';
+
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp(service: TaskService(MemoryTaskRepository())));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({super.key, required this.service});
+
+  final TaskService service;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Testing Lab',
-      home: Scaffold(
-        appBar: AppBar(title: const Text('Daftar tugas')),
-        body: const Center(child: Text('Belum ada tugas')),
-      ),
+      home: TaskPage(service: service),
     );
   }
 }
