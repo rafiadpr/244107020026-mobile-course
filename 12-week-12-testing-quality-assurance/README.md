@@ -39,16 +39,44 @@ Setiap pengujian menggunakan pola berikut:
 
 Pemeriksaan `isNotEmpty` saja masih menerima input yang hanya berisi spasi. Penggunaan `trim()` membuat input tersebut ditolak. Pengujian juga memastikan judul yang benar tetap diterima walaupun memiliki spasi di awal dan akhir.
 
+# Praktikum 2 : Menguji kode asinkron dan dependensi
+
+1. Memisahkan kontrak sumber data
+
+Kontrak di [lib/task_repository.dart](testing_lab/lib/task_repository.dart)
+
+Service di [lib/task_service.dart](testing_lab/lib/task_service.dart)
+
+2. Membuat fake repository
+
+Fake ada di [test/fakes/fake_task_repository.dart](testing_lab/test/fakes/fake_task_repository.dart)
+
+3. Menguji hasil berhasil, kosong, dan gagal
+
+Pengujian ada di [test/task_service_test.dart](testing_lab/test/task_service_test.dart)
+
+| Skenario | Kondisi repository | Hasil yang diharapkan |
+| --- | --- | --- |
+| Data berhasil dimuat | Berisi `Baca materi` dan `Kerjakan latihan` | Kedua tugas diterima sesuai urutan |
+| Belum ada tugas | Daftar kosong | Hasil berupa daftar kosong |
+| Gagal memuat tugas | Menghasilkan `Exception('Gagal memuat tugas')` | Error yang sama diteruskan ke pemanggil |
+
+Pengujian berhasil dan kosong memakai `await` untuk menunggu data. Pengujian kegagalan memakai `await expectLater` dengan `throwsA(same(error))` untuk memastikan error tetap diteruskan.
+
+4. Temuan
+
+Daftar kosong dan kegagalan mengambil data perlu dibedakan. Daftar kosong berarti data berhasil diambil tetapi belum ada tugas. Jika repository gagal, service meneruskan error agar pemanggil dapat menangani kegagalan tersebut.
+
 # Pengujian
 
 1. Flutter test
 
-Enam pengujian unit validasi judul tugas lulus.
+Hasil praktikum 1: enam pengujian unit validasi judul tugas lulus.
 
 ![Hasil flutter test](screenshots/flutter_test_praktikum1.png)
 
 2. Flutter analyze
 
-Analisis kode tidak menemukan masalah.
+Hasil analisis praktikum 1 tidak menemukan masalah.
 
 ![Hasil flutter analyze](screenshots/flutter_analyze_praktikum1.png)
