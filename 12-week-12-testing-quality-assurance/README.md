@@ -99,6 +99,29 @@ Pengujian di [test/task_page_test.dart](testing_lab/test/task_page_test.dart)
 
 Pesan daftar kosong perlu dibedakan dari pesan gagal memuat data. Saat penyimpanan gagal, judul tetap berada di kolom input agar tidak perlu diketik ulang. Tombol simpan dinonaktifkan selama penyimpanan untuk mencegah tugas yang sama terkirim dua kali.
 
+# Praktikum 4 : Pengujian integrasi dan regresi
+
+1. Menguji alur utama aplikasi
+
+Pengujian di [integration_test/app_test.dart](testing_lab/integration_test/app_test.dart)
+
+| Skenario | Hasil yang diharapkan |
+| --- | --- |
+| Aplikasi dibuka | Halaman daftar tugas tampil dan daftar masih kosong |
+| Judul hanya berisi spasi | Pesan validasi tampil dan tidak ada tugas yang ditambahkan |
+| Judul `Baca materi` disimpan dengan spasi di awal dan akhir | Tugas tampil tanpa spasi tambahan, pesan validasi hilang, dan kolom input kosong kembali |
+| Tugas kedua disimpan | Kedua tugas tampil di daftar dan tugas pertama tetap ada |
+
+2. Menambahkan pengujian regresi
+
+Pengujian regresi ditambahkan di [test/task_page_test.dart](testing_lab/test/task_page_test.dart) dengan nama `regresi: input kosong setelah menyimpan tidak menambah tugas`.
+
+Setelah satu tugas berhasil disimpan, tombol simpan ditekan lagi saat input kosong. Pengujian juga mencoba input yang hanya berisi spasi. Kedua kondisi harus menampilkan pesan validasi, sedangkan daftar dan catatan penyimpanan pada fake tetap berisi satu tugas.
+
+3. Temuan
+
+Pengujian integrasi memeriksa alur dari input pengguna sampai tugas tampil di daftar. Pengujian regresi menjaga agar aturan validasi tetap berlaku setelah tugas pertama disimpan dan kolom input dibersihkan.
+
 # Pengujian
 
 1. Flutter test

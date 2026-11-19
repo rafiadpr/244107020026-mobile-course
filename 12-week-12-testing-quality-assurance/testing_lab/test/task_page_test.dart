@@ -93,6 +93,38 @@ void main() {
       expect(find.text(emptyMessage), findsNothing);
     });
 
+    testWidgets(
+      'regresi: input kosong setelah menyimpan tidak menambah tugas',
+      (tester) async {
+        final repository = FakeTaskRepository();
+        await tester.pumpWidget(MyApp(service: TaskService(repository)));
+        await tester.pumpAndSettle();
+
+        await tester.enterText(titleField, 'Baca materi');
+        await tester.tap(saveButton);
+        await tester.pumpAndSettle();
+
+        expect(
+          tester.widget<TextFormField>(titleField).controller!.text,
+          isEmpty,
+        );
+        await tester.tap(saveButton);
+        await tester.pumpAndSettle();
+
+        expect(find.text('Judul tugas wajib diisi.'), findsOneWidget);
+        expect(repository.addedTasks, ['Baca materi']);
+
+        await tester.enterText(titleField, '   ');
+        await tester.tap(saveButton);
+        await tester.pumpAndSettle();
+
+        expect(find.text('Judul tugas wajib diisi.'), findsOneWidget);
+        expect(repository.addedTasks, ['Baca materi']);
+        expect(find.widgetWithText(ListTile, 'Baca materi'), findsOneWidget);
+        expect(find.byType(ListTile), findsOneWidget);
+      },
+    );
+
     testWidgets('menampilkan loading dan mencegah penyimpanan ganda', (
       tester,
     ) async {
