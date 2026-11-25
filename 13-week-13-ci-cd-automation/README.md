@@ -22,3 +22,18 @@ Workflow memakai izin `contents: read` untuk membaca kode. Saat ada push baru ke
 | --- | --- |
 | `flutter build apk --release` | `app-release.apk` untuk instalasi dan uji coba di perangkat Android |
 | `flutter build appbundle --release` | `app-release.aab` untuk distribusi melalui Google Play |
+
+# Praktikum 3 : Menjalankan dan mengevaluasi pipeline
+
+1. Push commit [4a089cc](https://github.com/rafiadpr/244107020026-mobile-course/commit/4a089cc2c61c7ce1f7fa8b5d099d3c086b89e973) ke branch `feature/week13-ci-cd-automation` memicu [Flutter CI #4](https://github.com/rafiadpr/244107020026-mobile-course/actions/runs/45554616513).
+2. Job `verify` berhasil dalam 6 menit 5 detik. Artefak `android-builds` berisi `app-release.apk` dan `app-release.aab`.
+
+| Pemeriksaan | Hasil |
+| --- | --- |
+| Format Dart | Lulus |
+| Analisis Flutter | Lulus |
+| Tes Flutter dengan cakupan pengujian | Lulus |
+| Build APK dan AAB | Keduanya berhasil |
+| Unggah artefak | `android-builds` tersedia di bagian **Artifacts** |
+
+![Hasil Flutter CI #4 dengan build APK, AAB, dan unggah artefak berhasil](screenshots/flutter_ci_run_4.png)
