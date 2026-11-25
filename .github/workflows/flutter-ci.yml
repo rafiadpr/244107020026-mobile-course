@@ -29,3 +29,20 @@ jobs:
       - run: dart format --output=none --set-exit-if-changed .
       - run: flutter analyze --fatal-infos
       - run: flutter test --coverage
+      - name: Build APK
+        run: flutter build apk --release
+      - name: Build AAB
+        run: flutter build appbundle --release
+      - name: Check Android builds
+        run: |
+          test -s build/app/outputs/flutter-apk/app-release.apk
+          test -s build/app/outputs/bundle/release/app-release.aab
+      - name: Upload Android builds
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-builds
+          path: |
+            13-week-13-ci-cd-automation/campus_notify/build/app/outputs/flutter-apk/app-release.apk
+            13-week-13-ci-cd-automation/campus_notify/build/app/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 7

@@ -12,3 +12,13 @@
 | `flutter test --coverage` | Menjalankan tes dan mencatat cakupan pengujian |
 
 Workflow memakai izin `contents: read` untuk membaca kode. Saat ada push baru ke branch yang sama, GitHub Actions membatalkan proses CI sebelumnya yang masih berjalan.
+
+# Praktikum 2 : Membangun dan menyimpan APK dan AAB
+
+1. [Workflow Flutter CI](../.github/workflows/flutter-ci.yml) membangun APK dan AAB setelah tes lulus.
+2. Workflow memeriksa kedua berkas hasil build, lalu mengunggahnya sebagai satu artefak bernama `android-builds`.
+
+| Perintah | Hasil |
+| --- | --- |
+| `flutter build apk --release` | `app-release.apk` untuk instalasi dan uji coba di perangkat Android |
+| `flutter build appbundle --release` | `app-release.aab` untuk distribusi melalui Google Play |
