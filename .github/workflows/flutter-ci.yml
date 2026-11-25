@@ -1,0 +1,48 @@
+name: Flutter CI
+
+on:
+  push:
+    branches: [main, feature/week13-ci-cd-automation]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: 13-week-13-ci-cd-automation/campus_notify
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter pub get
+      - run: dart format --output=none --set-exit-if-changed .
+      - run: flutter analyze --fatal-infos
+      - run: flutter test --coverage
+      - name: Build APK
+        run: flutter build apk --release
+      - name: Build AAB
+        run: flutter build appbundle --release
+      - name: Check Android builds
+        run: |
+          test -s build/app/outputs/flutter-apk/app-release.apk
+          test -s build/app/outputs/bundle/release/app-release.aab
+      - name: Upload Android builds
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-builds
+          path: |
+            13-week-13-ci-cd-automation/campus_notify/build/app/outputs/flutter-apk/app-release.apk
+            13-week-13-ci-cd-automation/campus_notify/build/app/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 7
